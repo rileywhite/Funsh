@@ -1,20 +1,32 @@
-﻿using System;
+﻿/***************************************************************************/
+// Copyright 2013-2019 Riley White
+// 
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+// 
+//     http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+/***************************************************************************/
+
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
 namespace Funship
 {
-    public interface Fist
+    public partial interface Fist
     {
-        #region Interface members
-
         public void Deconstruct(out dynamic head, out Fist tail);
         public dynamic Head { get; }
         public Fist Tail { get; }
         public bool IsNil { get; }
-
-        #endregion
 
         public static readonly Fist nilf = new Nilf();
 
@@ -109,9 +121,18 @@ namespace Funship
         {
             internal MFist(Fist src, Func<dynamic, dynamic> fun)
             {
-                this.Source = src;
-                this.Head = new Lazy<dynamic>(() => fun(src.Head));
-                this.Tail = new Lazy<Fist>(() => new MFist(src.Tail, fun));
+                switch (src)
+                {
+                    case (var head, Nilf _):
+                        this.Head = new Lazy<dynamic>(() => fun(head));
+                        this.Tail = new Lazy<Fist>(() => nilf);
+                        break;
+
+                    case var _:
+                        this.Head = new Lazy<dynamic>(() => fun(src.Head));
+                        this.Tail = new Lazy<Fist>(() => new MFist(src.Tail, fun));
+                        break;
+                }
             }
 
             public void Deconstruct(out dynamic head, out Fist tail)
@@ -119,8 +140,6 @@ namespace Funship
                 head = this.Head.Value;
                 tail = this.Tail.Value;
             }
-
-            private Fist Source { get; }
 
             private Lazy<dynamic> Head { get; }
             dynamic Fist.Head => this.Head.Value;
@@ -130,72 +149,6 @@ namespace Funship
 
             public bool IsNil => false;
         }
-
-        #endregion
-
-        #region Functions
-
-        public static Fist map(Fist list, Func<dynamic, dynamic> fun) => new MFist(list, fun);
-
-        public static dynamic reduce(Fist list, Func<dynamic, dynamic, dynamic> fun) => list switch
-        {
-            Nilf _ => throw new ArgumentException("Fist must not be empty", nameof(list)),
-            (var head, var tail) => reduce(tail, head, fun),
-        };
-
-        public static dynamic reduce(Fist list, dynamic acc, Func<dynamic, dynamic, dynamic> fun) => list switch
-        {
-            Nilf _ => acc,
-            (var head, var tail) => reduce(tail, fun(head, acc), fun),
-        };
-
-        public static Fist print(Fist list) => print(list, Console.Out);
-        public static Fist print(Fist list, TextWriter tw) => print(list, tw, list);
-        private static Fist print(Fist list, TextWriter tw, Fist ret)
-        {
-            switch (list)
-            {
-
-                case (var head, Nilf _):
-                    tw.Write(head);
-                    return ret;
-
-                case (var head, var tail):
-                    tw.Write($"{head} ");
-                    return print(tail, tw);
-
-                case var _:
-                    return ret;
-            }
-        }
-
-        public static Fist println(Fist list) => println(list, Console.Out);
-        public static Fist println(Fist list, TextWriter tw) => println(list, tw, list);
-        public static Fist println(Fist list, TextWriter tw, Fist ret)
-        {
-            switch (list)
-            {
-
-                case (var head, Nilf _):
-                    tw.WriteLine(head);
-                    return ret;
-
-                case (var head, var tail):
-                    tw.Write($"{head} ");
-                    return println(tail, tw);
-
-                case var _:
-                    tw.WriteLine();
-                    return list;
-            }
-        }
-
-        public static Fist reverse(Fist list) => reverse(list, nilf);
-        private static Fist reverse(Fist list, Fist acc) => list switch
-        {
-            Nilf _ => acc,
-            (var head, var tail) => reverse(tail, new SFist(head, acc))
-        };
 
         #endregion
     }
