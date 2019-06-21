@@ -2,7 +2,8 @@
 Functional Programming in C#
 
 # To Use
-```using System;
+```c#
+using System;
 using static Funship.Fist;                                  // Get access to functional magic.
 
 namespace Sandbox
