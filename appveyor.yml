@@ -1,5 +1,6 @@
-﻿install: 
-  - cmd: choco install dotnetcore-sdk --pre
+﻿image: Visual Studio 2019 Preview
+
 version: 0.0.{build}
+
 build:
   verbosity: minimal
