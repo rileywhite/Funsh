@@ -16,7 +16,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 
 namespace Funship
@@ -40,7 +39,7 @@ namespace Funship
             return newf;
         }
 
-        public static Fist fist(ICollection<dynamic> vals) => vals.Any() ? new DFist(vals.First(), vals.Skip(1)) : nilf;
+        public static Fist to_fist<T>(IEnumerable<T> vals) => vals.Any() ? new DFist<T>(vals.First(), vals.Skip(1)) : nilf;
 
 
         #region Fist types
@@ -92,12 +91,12 @@ namespace Funship
         /// <summary>
         /// Dynamic list
         /// </summary>
-        private readonly struct DFist : Fist
+        private readonly struct DFist<T> : Fist
         {
-            internal DFist(dynamic head, IEnumerable<dynamic> tail)
+            internal DFist(dynamic head, IEnumerable<T> tail)
             {
                 this.Head = head;
-                this.Tail = new Lazy<Fist>(() => tail.Any() ? new DFist(tail.First(), tail.Skip(1)) : nilf);
+                this.Tail = new Lazy<Fist>(() => tail.Any() ? new DFist<T>(tail.First(), tail.Skip(1)) : nilf);
             }
 
             public void Deconstruct(out dynamic head, out Fist tail)
