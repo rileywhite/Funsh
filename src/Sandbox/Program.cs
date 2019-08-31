@@ -16,7 +16,9 @@
 
 using System;
 using System.Linq;
-using static Funship.Fist;                                    // Get access to functional magic.
+using static Funship.Fist;                                    // Get access to functional lists.
+using static Funship.Funf;                                    // Get access to function functions.  
+
 
 namespace Sandbox
 {
@@ -32,9 +34,20 @@ namespace Sandbox
             var mappedList = map(list, x => 2 * x);           // Map to a new list with each element doubled
             println(mappedList);                              // Prints 2, 4, 6, 8
 
-            var bigList = to_fist(Enumerable.Range(0, 10000)); // List with ten thousand items. Will be lazy-created.
+#if DEBUG
+            var bigList = to_fist(Enumerable.Range(0, 1000)); // List with 10 thousand items. Will be lazy-created. (Tail.Fody doesn't currently catch this call in Debug compiles.)
+#else
+            var bigList = to_fist(Enumerable.Range(0, 10000000)); // List with 10 million items. Will be lazy-created.
+#endif
             var max = reduce(bigList, (x, acc) => x > acc ? x : acc);
-            Console.WriteLine(max);                            // Prints 9999
+            Console.WriteLine(max);                            // Prints 999 in debug mode and 9999999 in release
+
+            var fun = funf(x => x + 1);
+            Console.WriteLine(fun.x(10));
+
+            var twoparam = funf((x, y) => x - y);
+            var oneparam = twoparam.x(6);
+            Console.WriteLine(((Funship.Funf)oneparam).x(2));
         }
     }
 }

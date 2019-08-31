@@ -1,5 +1,5 @@
 ﻿/***************************************************************************/
-// Copyright 2013-2019 Riley White
+// Copyright 2019 Riley White
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -29,11 +29,22 @@ namespace Funship
             (var head, var tail) => reduce(tail, head, fun),
         };
 
-        public static dynamic reduce(Fist list, dynamic acc, Func<dynamic, dynamic, dynamic> fun) => list switch
+        public static dynamic reduce(Fist list, dynamic acc, Func<dynamic, dynamic, dynamic> fun)
         {
-            Nilf _ => acc,
-            (var head, var tail) => reduce(tail, fun(head, acc), fun),
-        };
+            switch (list)
+            {
+                case Nilf _: return acc;
+                case (var head, var tail): return reduce(tail, fun(head, acc), fun);
+                default:
+                    throw new ArgumentException("No match for value", nameof(list));
+            }
+        }
+
+        //public static dynamic reduce(Fist list, dynamic acc, Func<dynamic, dynamic, dynamic> fun) => list switch
+        //{
+        //    Nilf _ => acc,
+        //    (var head, var tail) => reduce(tail, fun(head, acc), fun),
+        //};
 
         public static Fist print(Fist list) => print(list, Console.Out);
         public static Fist print(Fist list, TextWriter tw) => print(list, tw, list);
