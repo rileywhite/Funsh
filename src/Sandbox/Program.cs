@@ -46,8 +46,12 @@ namespace Sandbox
             Console.WriteLine(fun.x(10));
 
             var twoparam = funf((x, y) => x - y);
-            var oneparam = twoparam.x(6);
-            Console.WriteLine(((Funship.Funf)oneparam).x(2));
+            Funship.Funf oneparam = twoparam.x(6);
+            Console.WriteLine(oneparam.x(2));
+
+            var partialCallOneParam = twoparam[6];
+            var partialCallZeroParam = partialCallOneParam[1];
+            Console.WriteLine(partialCallZeroParam.x());
         }
     }
 }
