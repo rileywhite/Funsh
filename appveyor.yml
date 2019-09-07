@@ -7,3 +7,5 @@ install:
 
 build:
   verbosity: detailed
+
+build_script: dotnet build "src\Funship.sln"
