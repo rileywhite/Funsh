@@ -2,8 +2,5 @@
 
 version: 0.1.{build}
 
-install: 
-  - cmd: choco install dotnetcore-sdk --pre
-
 build:
   verbosity: minimal
