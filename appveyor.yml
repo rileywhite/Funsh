@@ -8,7 +8,17 @@ install:
 build:
   verbosity: minimal
 
-build_script: dotnet build "src\Funship.sln"
+before_build:
+- ps: .\ModifyVersion.ps1 $env:APPVEYOR_BUILD_FOLDER\src\Proverb.Web\Proverb.Web.csproj $env:APPVEYOR_BUILD_NUMBER
+
+build_script: dotnet build -c Release "src\Funship.sln"
+
+after_build:
+  - dotnet pack --no-build -c Release -o nupkgs src/Funship/Funship.csproj
 
 test_script:
   - dotnet test "src\Funship.Tests\Funship.Tests.csproj"
+
+artifacts:
+- path: '**\*.nupkg'
+  name: Funship Packages
