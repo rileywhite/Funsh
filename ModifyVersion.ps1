@@ -1,5 +1,7 @@
 Param($projectFile, $buildNum)
 
+# Modified from https://blog.johnnyreilly.com/2017/04/setting-build-version-using-appveyor.html
+
 $content = [IO.File]::ReadAllText($projectFile)
 
 $regex = new-object System.Text.RegularExpressions.Regex ('()([\d]+.[\d]+.[\d]+)(.[\d]+)(<\/Version>)', 
