@@ -9,3 +9,6 @@ build:
   verbosity: minimal
 
 build_script: dotnet build "src\Funship.sln"
+
+test_script:
+  - dotnet test "src\Funship.Tests\Funship.Tests.csproj"
