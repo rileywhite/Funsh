@@ -18,7 +18,7 @@ if($match.Success) {
 $version = "$version.$buildNum"
 
 # update "1.0.0.0" to "$version"
-$content = $regex.Replace($content, '${1}' + $version + '${4}-dev')
+$content = $regex.Replace($content, '${1}' + $version + '-dev${4}')
 
 # update csproj file
 [IO.File]::WriteAllText($projectFile, $content)
