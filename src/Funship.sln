@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Funship", "Funship\Funship.csproj", "{3B2CD92A-E547-496D-B392-43F5919D6F57}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FunshipTests", "FunshipTests\FunshipTests.csproj", "{DDAC0E76-3092-470F-B4C2-672139E045E9}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Funship.Tests", "Funship.Tests\Funship.Tests.csproj", "{DDAC0E76-3092-470F-B4C2-672139E045E9}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sandbox", "Sandbox\Sandbox.csproj", "{0F940AC8-8CFB-488F-8378-9F60A06F2026}"
 EndProject

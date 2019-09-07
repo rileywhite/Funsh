@@ -129,7 +129,7 @@ namespace Funship
                     return ret;
 
                 case (var head, var tail):
-                    tw.Write($"{head}{delimiter ?? ""}");
+                    tw.Write($"{head}{delimiter}");
                     return print(tail, tw, delimiter, ret);
 
                 case var _:
@@ -179,7 +179,7 @@ namespace Funship
                     return ret;
 
                 case (var head, var tail):
-                    tw.Write($"{head}{delimiter ?? ""}");
+                    tw.Write($"{head}{delimiter}");
                     return println(tail, tw, delimiter, ret);
 
                 case var _:

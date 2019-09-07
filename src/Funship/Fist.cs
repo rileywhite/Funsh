@@ -196,12 +196,14 @@ namespace Funship
             /// </summary>
             public bool IsNil => true;
 
+#nullable enable
             /// <summary>
             /// Tests equality
             /// </summary>
             /// <param name="obj">Object to test against</param>
             /// <returns><c>true</c> for any other <see cref="Nilf"/>, else <c>false</c></returns>
-            public override bool Equals(object obj) => obj != null && obj is Fist && equals(this, (Fist)obj);
+            public override bool Equals(object? obj) => obj != null && obj is Fist && equals(this, (Fist)obj);
+#nullable disable
 
             /// <summary>
             /// Hash code for <see cref="Nilf"/> is always 0;
@@ -239,8 +241,10 @@ namespace Funship
             public Fist Tail { get; }
             public bool IsNil => false;
 
-            public override bool Equals(object obj) =>
+#nullable enable
+            public override bool Equals(object? obj) =>
                 obj != null && obj is Fist && equals(this, (Fist)obj);
+#nullable disable
 
             public override int GetHashCode() => hash_code(this);
         }

@@ -1,4 +1,6 @@
-﻿# Funship
+﻿![Build Status](https://ci.appveyor.com/api/projects/status/github/rileywhite/funship?svg=true)
+
+# Funship
 Functional Programming in C#
 
 # To Use

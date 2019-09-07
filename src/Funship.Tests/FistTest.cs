@@ -39,7 +39,7 @@ namespace FunshipTests
 
             Assert.Equal(nilf, nilf);
             Assert.Equal(nilf.GetHashCode(), nilf.GetHashCode());
-            Assert.Equal(nilf.GetHashCode(), 0);
+            Assert.Equal(0, nilf.GetHashCode());
 
             Assert.NotEqual(fist(2, 4, 6, 8), nilf);
             Assert.NotEqual(fist(2, 4, 6, 8).GetHashCode(), nilf.GetHashCode());
@@ -64,35 +64,8 @@ namespace FunshipTests
         public void nilf_is_a_singleton()
         {
             Assert.Same(nilf, fist());
-            Assert.Same(nilf, fist(null));
-            Assert.Same(nilf, to_fist(null));
             Assert.Same(nilf, to_fist(new int[] { }));
             Assert.NotSame(nilf, to_fist(new int[] { 1 }));
-        }
-
-        [Fact]
-        public void null_value_not_allowed_in_fist()
-        {
-            Assert.Equal(nilf, fist(null));
-            Assert.Equal(nilf, to_fist(null));
-
-            Assert.Throws<ArgumentException>(() => fist(null, null));
-            Assert.Throws<ArgumentException>(() => to_fist(new object[] { null }));
-            Assert.Throws<ArgumentException>(() =>
-            {
-                var list = to_fist(new object[] { 1, 2, 3, null });
-
-                // for a mapped list, the error won't occur until the list is traversed
-                println(list, StreamWriter.Null);
-            });
-
-            Assert.Throws<ArgumentException>(() =>
-            {
-                var list = map(fist(1, 2, 3), x => null);
-
-                // for a mapped list, the error won't occur until the list is traversed
-                println(list, StreamWriter.Null);
-            });
         }
 
         [Fact]
@@ -132,15 +105,6 @@ namespace FunshipTests
         }
 
         [Fact]
-        public void print_works_with_null_delimiter()
-        {
-            using var sw = new StringWriter();
-            print(fist(1, 2, 3, 4, 5), sw, null);
-
-            Assert.Equal("12345", sw.ToString());
-        }
-
-        [Fact]
         public void println_works_with_custom_delimiter()
         {
             using var sw = new StringWriter();
@@ -158,15 +122,6 @@ namespace FunshipTests
             println(fist(1, 2, 3, 4, 5), sw);
 
             Assert.Equal("1 2 3 4 5\n", sw.ToString());
-        }
-
-        [Fact]
-        public void println_works_with_null_delimiter()
-        {
-            using var sw = new StringWriter();
-            println(fist(1, 2, 3, 4, 5), sw, null);
-
-            Assert.Equal("12345\n", sw.ToString());
         }
 
         [Fact]
