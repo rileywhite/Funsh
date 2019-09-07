@@ -40,15 +40,9 @@ namespace Funship
             }
         }
 
-        //public static dynamic reduce(Fist list, dynamic acc, Func<dynamic, dynamic, dynamic> fun) => list switch
-        //{
-        //    Nilf _ => acc,
-        //    (var head, var tail) => reduce(tail, fun(head, acc), fun),
-        //};
-
-        public static Fist print(Fist list) => print(list, Console.Out);
-        public static Fist print(Fist list, TextWriter tw) => print(list, tw, list);
-        private static Fist print(Fist list, TextWriter tw, Fist ret)
+        public static Fist print(Fist list, string delimiter = " ") => print(list, Console.Out, delimiter, list);
+        public static Fist print(Fist list, TextWriter tw, string delimiter = " ") => print(list, tw, delimiter, list);
+        private static Fist print(Fist list, TextWriter tw, string delimiter, Fist ret)
         {
             switch (list)
             {
@@ -58,17 +52,17 @@ namespace Funship
                     return ret;
 
                 case (var head, var tail):
-                    tw.Write($"{head} ");
-                    return print(tail, tw, ret);
+                    tw.Write($"{head}{delimiter ?? ""}");
+                    return print(tail, tw, delimiter, ret);
 
                 case var _:
                     return ret;
             }
         }
 
-        public static Fist println(Fist list) => println(list, Console.Out);
-        public static Fist println(Fist list, TextWriter tw) => println(list, tw, list);
-        public static Fist println(Fist list, TextWriter tw, Fist ret)
+        public static Fist println(Fist list, string delimiter = " ") => println(list, Console.Out, delimiter, list);
+        public static Fist println(Fist list, TextWriter tw, string delimiter = " ") => println(list, tw, delimiter, list);
+        private static Fist println(Fist list, TextWriter tw, string delimiter, Fist ret)
         {
             switch (list)
             {
@@ -78,8 +72,8 @@ namespace Funship
                     return ret;
 
                 case (var head, var tail):
-                    tw.Write($"{head} ");
-                    return println(tail, tw, ret);
+                    tw.Write($"{head}{delimiter ?? ""}");
+                    return println(tail, tw, delimiter, ret);
 
                 case var _:
                     tw.WriteLine();
@@ -92,6 +86,20 @@ namespace Funship
         {
             Nilf _ => acc,
             (var head, var tail) => reverse(tail, new SFist(head, acc))
+        };
+
+        public static bool all(Fist list, Funf fun) => list switch
+        {
+            Nilf _ => true,
+            (var head, _) when !fun.x(head) => false,
+            (_, Fist tail) => all(tail, fun),
+        };
+
+        public static bool any(Fist list, Funf fun) => list switch
+        {
+            Nilf _ => false,
+            (var head, _) when fun.x(head) => true,
+            (_, Fist tail) => any(tail, fun),
         };
     }
 }

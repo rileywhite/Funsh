@@ -15,6 +15,7 @@
 /***************************************************************************/
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -31,6 +32,10 @@ namespace Funship
 
         public static Fist fist(params dynamic[] vals)
         {
+            // special case where 1 null is sent, we'll convert to nilf
+            if (vals == null || (vals.Length == 1 && vals[0] == null)) { return nilf; }
+
+            // otherwise we'll build a Fist of values, and throw exceptions on null
             var newf = nilf;
             for (var i = vals.Length - 1; i >= 0; i--)
             {
@@ -39,8 +44,25 @@ namespace Funship
             return newf;
         }
 
-        public static Fist to_fist<T>(IEnumerable<T> vals) => vals.Any() ? new DFist<T>(vals.First(), vals.Skip(1)) : nilf;
+        public static Fist to_fist<T>(IEnumerable<T> vals) => vals switch
+        {
+            null => nilf,
+            _ when !vals.Any() => nilf,
+            _ => new DFist<T>(vals.First(), vals.Skip(1)),
+        };
 
+        public static Fist to_fist(IEnumerable vals) => to_fist((IEnumerable<object>)vals);
+
+        public static bool equals(Fist left, Fist right) => (left, right) switch
+        {
+            (Nilf _, Nilf _) => true,
+            ((_, _), Nilf _) => false,
+            (Nilf _, (_, _)) => false,
+            ((var headL, Fist tailL), (var headR, Fist tailR)) when headL.Equals(headR) => equals(tailL, tailR),
+            _ => false,
+        };
+
+        public static int hash_code(Fist list) => reduce(list, (x, acc) => 486187739 * acc + (x.GetHashCode()));
 
         #region Fist types
 
@@ -67,12 +89,14 @@ namespace Funship
         {
             internal SFist(dynamic head)
             {
+                if (head == null) { throw new ArgumentException("SFist cannot contain a null value"); }
                 this.Head = head;
                 this.Tail = nilf;
             }
 
             internal SFist(dynamic head, Fist tail)
             {
+                if (head == null) { throw new ArgumentException("SFist cannot contain a null value"); }
                 this.Head = head;
                 this.Tail = tail;
             }
@@ -86,6 +110,11 @@ namespace Funship
             public dynamic Head { get; }
             public Fist Tail { get; }
             public bool IsNil => false;
+
+            public override bool Equals(object obj) =>
+                obj != null && obj is Fist && equals(this, (Fist)obj);
+
+            public override int GetHashCode() => hash_code(this);
         }
 
         /// <summary>
@@ -95,6 +124,7 @@ namespace Funship
         {
             internal DFist(dynamic head, IEnumerable<T> tail)
             {
+                if (head == null) { throw new ArgumentException("DFist cannot contain a null value"); }
                 this.Head = head;
                 this.Tail = new Lazy<Fist>(() => tail.Any() ? new DFist<T>(tail.First(), tail.Skip(1)) : nilf);
             }
@@ -111,6 +141,11 @@ namespace Funship
             Fist Fist.Tail => this.Tail.Value;
 
             public bool IsNil => false;
+
+            public override bool Equals(object obj) =>
+                obj != null && obj is Fist && equals(this, (Fist)obj);
+
+            public override int GetHashCode() => hash_code(this);
         }
 
         /// <summary>
@@ -123,12 +158,22 @@ namespace Funship
                 switch (src)
                 {
                     case (var head, Nilf _):
-                        this.Head = new Lazy<dynamic>(() => fun(head));
+                        this.Head = new Lazy<dynamic>(() =>
+                        {
+                            var h = fun(head);
+                            if (h == null) { throw new ArgumentException("MFist cannot map to a null value"); }
+                            return h;
+                        });
                         this.Tail = new Lazy<Fist>(() => nilf);
                         break;
 
                     case var _:
-                        this.Head = new Lazy<dynamic>(() => fun(src.Head));
+                        this.Head = new Lazy<dynamic>(() =>
+                        {
+                            var h = fun(src.Head);
+                            if (h == null) { throw new ArgumentException("MFist cannot map to a null value"); }
+                            return h;
+                        });
                         this.Tail = new Lazy<Fist>(() => new MFist(src.Tail, fun));
                         break;
                 }
@@ -147,6 +192,11 @@ namespace Funship
             Fist Fist.Tail => this.Tail.Value;
 
             public bool IsNil => false;
+
+            public override bool Equals(object obj) =>
+                obj != null && obj is Fist && equals(this, (Fist)obj);
+
+            public override int GetHashCode() => hash_code(this);
         }
 
         #endregion

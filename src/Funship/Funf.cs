@@ -17,8 +17,6 @@
 using System;
 using System.Linq;
 
-using static Funship.Fist;
-
 namespace Funship
 {
     public interface Funf
@@ -272,15 +270,5 @@ namespace Funship
 
             public dynamic x(params dynamic[] args) => this.Fun.x(this.Args.Concat(args).ToArray());
         }
-
-        //public static Funf curry<T1, T2, TResult>(Func<T1, T2, TResult> func)
-        //{
-        //    return new WFunf01<T1>(t1 => curry<T2, TResult>(t2 => func(t1, t2)));
-        //}
-
-        //public static Funf curry<T1, T2, TResult>(Func<T1, T2, TResult> func)
-        //{
-        //    return new WFunf01<T1>(t1 => curry<T2, TResult>(t2 => func(t1, t2)));
-        //}
     }
 }

@@ -52,6 +52,9 @@ namespace Sandbox
             var partialCallOneParam = twoparam[6];
             var partialCallZeroParam = partialCallOneParam[1];
             Console.WriteLine(partialCallZeroParam.x());
+
+            Console.WriteLine($"Everything greater than 5? {all(fist(6, 7, 8, 9), funf(x => x > 5))}");
+            Console.WriteLine($"Is this other stuff greater than 5? {all(fist(6, 4, 8, 9), funf(x => x > 5))}");
         }
     }
 }

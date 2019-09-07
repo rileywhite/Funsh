@@ -15,20 +15,200 @@
 /***************************************************************************/
 
 using System;
+using System.IO;
+using System.Linq;
+using Microsoft.CSharp.RuntimeBinder;
 using Xunit;
 
 using static Funship.Fist;
+using static Funship.Funf;
 
 namespace FunshipTests
 {
     public class FistTest
     {
         [Fact]
-        public void reduce_ints_with_multiplication_works()
+        public void can_test_equality_and_hashcode()
+        {
+            var list = fist(2, 4, 6, 8);
+            var dynamicList = to_fist(Enumerable.Range(1, 4));
+            var mappedList = map(fist(1, 2, 3, 4), x => 2 * x);
+
+            Assert.Equal(fist(2, 4, 6, 8), list);
+
+            Assert.Equal(fist(2, 4, 6, 8), mappedList);
+            Assert.Equal(fist(2, 4, 6, 8).GetHashCode(), mappedList.GetHashCode());
+
+            Assert.Equal(fist(1, 2, 3, 4), dynamicList);
+            Assert.Equal(fist(1, 2, 3, 4).GetHashCode(), dynamicList.GetHashCode());
+
+            Assert.NotEqual(fist(2, 3, 4, 5), list);
+            Assert.NotEqual(fist(2, 3, 4, 5).GetHashCode(), list.GetHashCode());
+
+            Assert.NotEqual(fist(2, 4, 8), list);
+            Assert.NotEqual(fist(2, 4, 8).GetHashCode(), list.GetHashCode());
+
+            Assert.NotEqual(fist(8, 6, 4, 2), list);
+            Assert.NotEqual(fist(8, 6, 4, 2).GetHashCode(), list.GetHashCode());
+        }
+
+        [Fact]
+        public void nilf_is_a_singleton()
+        {
+            Assert.Same(nilf, fist());
+            Assert.Same(nilf, fist(null));
+            Assert.Same(nilf, to_fist(null));
+            Assert.Same(nilf, to_fist(new int[] { }));
+            Assert.NotSame(nilf, to_fist(new int[] { 1 }));
+        }
+
+        [Fact]
+        public void null_value_not_allowed_in_fist()
+        {
+            Assert.Equal(nilf, fist(null));
+            Assert.Equal(nilf, to_fist(null));
+
+            Assert.Throws<ArgumentException>(() => fist(null, null));
+            Assert.Throws<ArgumentException>(() => to_fist(new object[] { null }));
+            Assert.Throws<ArgumentException>(() =>
+            {
+                var list = to_fist(new object[] { 1, 2, 3, null });
+
+                // for a mapped list, the error won't occur until the list is traversed
+                println(list, StreamWriter.Null);
+            });
+
+            Assert.Throws<ArgumentException>(() =>
+            {
+                var list = map(fist(1, 2, 3), x => null);
+
+                // for a mapped list, the error won't occur until the list is traversed
+                println(list, StreamWriter.Null);
+            });
+        }
+
+        [Fact]
+        public void can_reduce_list()
         {
             var list = fist(1, 2, 3, 4);
             var result = reduce(list, (x, acc) => x * acc);
             Assert.Equal(24, result);
+        }
+
+        [Fact]
+        public void can_map_list()
+        {
+            var list = fist(1, 2, 3, 4);
+            var result = map(fist(1, 2, 3, 4), x => x * 2);
+            Assert.Equal(result, fist(2, 4, 6, 8));
+        }
+
+        [Fact]
+        public void print_works_with_custom_delimiter()
+        {
+            using var sw = new StringWriter();
+            print(fist(1, 2, 3, 4, 5), sw, "__093409832978973243509092__");
+
+            Assert.Equal(
+                "1__093409832978973243509092__2__093409832978973243509092__3__093409832978973243509092__4__093409832978973243509092__5",
+                sw.ToString());
+        }
+
+        [Fact]
+        public void print_works_with_default_delimiter()
+        {
+            using var sw = new StringWriter();
+            print(fist(1, 2, 3, 4, 5), sw);
+
+            Assert.Equal("1 2 3 4 5", sw.ToString());
+        }
+
+        [Fact]
+        public void print_works_with_null_delimiter()
+        {
+            using var sw = new StringWriter();
+            print(fist(1, 2, 3, 4, 5), sw, null);
+
+            Assert.Equal("12345", sw.ToString());
+        }
+
+        [Fact]
+        public void println_works_with_custom_delimiter()
+        {
+            using var sw = new StringWriter();
+            println(fist(1, 2, 3, 4, 5), sw, "__093409832978973243509092__");
+
+            Assert.Equal(
+                "1__093409832978973243509092__2__093409832978973243509092__3__093409832978973243509092__4__093409832978973243509092__5\n",
+                sw.ToString());
+        }
+
+        [Fact]
+        public void println_works_with_default_delimiter()
+        {
+            using var sw = new StringWriter();
+            println(fist(1, 2, 3, 4, 5), sw);
+
+            Assert.Equal("1 2 3 4 5\n", sw.ToString());
+        }
+
+        [Fact]
+        public void println_works_with_null_delimiter()
+        {
+            using var sw = new StringWriter();
+            println(fist(1, 2, 3, 4, 5), sw, null);
+
+            Assert.Equal("12345\n", sw.ToString());
+        }
+
+        [Fact]
+        public void all_works_with_valid_fun()
+        {
+            Assert.True(all(nilf, funf(x => x > 5)));
+            Assert.True(all(fist(6, 7, 8, 9), funf(x => x > 5)));
+            Assert.True(all(fist(6), funf(x => x > 5)));
+            Assert.False(all(fist(4, 8, 9), funf(x => x > 5)));
+            Assert.False(all(fist(4), funf(x => x > 5)));
+            Assert.False(all(fist(4, 7, 8, 9), funf(x => x > 5)));
+            Assert.False(all(fist(6, 4, 8, 9), funf(x => x > 5)));
+            Assert.False(all(fist(6, 7, 8, 4), funf(x => x > 5)));
+        }
+
+        [Fact]
+        public void all_works_on_nilf_with_invalid_fun() => Assert.True(all(nilf, funf(x => 12)));
+
+        [Fact]
+        public void all_fails_on_nonempty_fist_with_invalid_fun() =>
+            Assert.Throws<RuntimeBinderException>(() => all(fist(1), funf(x => 12)));
+
+        [Fact]
+        public void any_works_with_valid_fun()
+        {
+            Assert.False(any(nilf, funf(x => x > 5)));
+
+            Assert.False(any(fist(5, 4, 3, 2), funf(x => x > 5)));
+            Assert.False(any(fist(5), funf(x => x > 5)));
+
+            Assert.True(any(fist(6, 4, 3), funf(x => x > 5)));
+            Assert.True(any(fist(6), funf(x => x > 5)));
+            Assert.True(any(fist(6, 2, 3, 4), funf(x => x > 5)));
+            Assert.True(any(fist(5, 6, 4, 3), funf(x => x > 5)));
+            Assert.True(any(fist(2, 3, 4, 6), funf(x => x > 5)));
+        }
+
+        [Fact]
+        public void any_works_on_nilf_with_invalid_fun() => Assert.False(any(nilf, funf(x => 12)));
+
+        [Fact]
+        public void any_fails_on_nonempty_fist_with_invalid_fun() =>
+            Assert.Throws<RuntimeBinderException>(() => any(fist(1), funf(x => 12)));
+
+        [Fact]
+        public void reverse_works_as_expected()
+        {
+            Assert.Equal(nilf, reverse(nilf));
+            Assert.Equal(fist(1), reverse(fist(1)));
+            Assert.Equal(fist(1, 2, 3, 4, 5), reverse(fist(5, 4, 3, 2, 1)));
         }
     }
 }
