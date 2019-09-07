@@ -111,7 +111,7 @@ namespace FunshipTests
             println(fist(1, 2, 3, 4, 5), sw, "__093409832978973243509092__");
 
             Assert.Equal(
-                "1__093409832978973243509092__2__093409832978973243509092__3__093409832978973243509092__4__093409832978973243509092__5\n",
+                $"1__093409832978973243509092__2__093409832978973243509092__3__093409832978973243509092__4__093409832978973243509092__5{Environment.NewLine}",
                 sw.ToString());
         }
 
@@ -121,7 +121,7 @@ namespace FunshipTests
             using var sw = new StringWriter();
             println(fist(1, 2, 3, 4, 5), sw);
 
-            Assert.Equal("1 2 3 4 5\n", sw.ToString());
+            Assert.Equal($"1 2 3 4 5{Environment.NewLine}", sw.ToString());
         }
 
         [Fact]
