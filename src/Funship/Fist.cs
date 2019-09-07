@@ -21,29 +21,96 @@ using System.Linq;
 
 namespace Funship
 {
+    /// <summary>
+    /// Represents a functional list that is constructed with a <see cref="Head"/>,
+    /// which is the first element in the functional list, and a <see cref="Tail"/>
+    /// which reprents the remainder of the functional list without the tail.
+    /// </summary>
+    /// <remarks>
+    /// Create a fist using <see cref="fist(dynamic[])"/>, <see cref="to_fist(IEnumerable)"/>,
+    /// or <see cref="to_fist{T}(IEnumerable{T})"/>.
+    /// 
+    /// A <see cref="Fist"/> can be matched as a <see cref="ValueTuple{dynamic, Fist}"/>
+    /// in a <c>switch</c> statement.
+    ///
+    /// An empty list, which as a <see cref="Tail"/> value also indicates the end of a non-empty list,
+    /// is represented by <see cref="nilf"/>, which can be matched by type <see cref="Nilf"/>.
+    ///
+    /// All <see cref="Fist"/> implementations must be immutable and should be internal or private
+    /// within the assemblies that define them.
+    /// </remarks>
+    /// <example>
+    /// using static Funship.Fist;
+    /// 
+    /// static int Main(string[] args)
+    /// {
+    ///     var list = fist(args);
+    ///     
+    ///     return list switch
+    ///     {
+    ///         Nilf _ => 0,                // return 0 if no args were passed
+    ///         (var head, Nilf _) => 1,    // returns 1 if exactly one arg was passed
+    ///         (var head, Fist _) => 2,    // returns 2 two or more args were passed
+    ///     };
+    /// }
+    /// </example>
     public partial interface Fist
     {
+        /// <summary>
+        /// Provides a <see cref="ValueTuple{dynamic, Fist}"/> deconstruction of the <see cref="Fist"/>
+        /// </summary>
+        /// <param name="head">First item of the deconstruction is the <see cref="Head"/></param>
+        /// <param name="tail">Second item of the deconstruction is the <see cref="Tail"/></param>
         public void Deconstruct(out dynamic head, out Fist tail);
+
+        /// <summary>
+        /// Gets the first element in the <see cref="Fist"/>
+        /// </summary>
         public dynamic Head { get; }
+
+        /// <summary>
+        /// Gets the part of the list remaining in the <see cref="Fist"/> after the <see cref="Head"/>
+        /// </summary>
         public Fist Tail { get; }
+
+        /// <summary>
+        /// Gets whether the <see cref="Fist"/> is an empty/nil list. Only the <see cref="Nilf"/> type's
+        /// <see cref="nilf"/> instance will return <c>true</c>.
+        /// </summary>
         public bool IsNil { get; }
 
+        /// <summary>
+        /// Singleton <see cref="Nilf"/> that is used to represent an empty <see cref="Fist"/>.
+        /// </summary>
         public static readonly Fist nilf = new Nilf();
 
-        public static Fist fist(params dynamic[] vals)
+        /// <summary>
+        /// Creates a new <see cref="Fist"/> from a given set of values
+        /// </summary>
+        /// <param name="vals">Values to add to a list</param>
+        /// <returns>A new <see cref="Fist"/> containing the passed values in the order in which they were passed</returns>
+        /// <remarks>
+        /// There are two scenarios when this will return <see cref="nilf"/>:
+        /// 1. When <paramref name="vals"/> is empty, i.e. no values are passed in the call.
+        /// 2. When a single <c>null</c> is passed.
+        /// </remarks>
+        public static Fist fist(params dynamic[] vals) => vals switch
         {
-            // special case where 1 null is sent, we'll convert to nilf
-            if (vals == null || (vals.Length == 1 && vals[0] == null)) { return nilf; }
+            null => nilf,
+            _ when vals.Length == 1 && vals[0] == null => nilf,
+            _ => to_fist(vals.AsEnumerable()),
+        };
 
-            // otherwise we'll build a Fist of values, and throw exceptions on null
-            var newf = nilf;
-            for (var i = vals.Length - 1; i >= 0; i--)
-            {
-                newf = new SFist(vals[i], newf);
-            }
-            return newf;
-        }
-
+        /// <summary>
+        /// Converts a given <see cref="IEnumerable{T}"/> to a <see cref="Fist"/>.
+        /// </summary>
+        /// <typeparam name="T">Type contained in the <see cref="IEnumerable{T}"/></typeparam>
+        /// <param name="vals">Collection of items that the new <see cref="Fist"/> should contain in order</param>
+        /// <returns><see cref="Fist"/> containing the items in <paramref name="vals"/></returns>
+        /// <remarks>
+        /// The <see cref="Fist"/> creation is done in a lazy manner. Each item in <paramref name="vals"/>
+        /// is enumerated over only as the <see cref="Fist"/> is traversed.
+        /// </remarks>
         public static Fist to_fist<T>(IEnumerable<T> vals) => vals switch
         {
             null => nilf,
@@ -51,35 +118,96 @@ namespace Funship
             _ => new DFist<T>(vals.First(), vals.Skip(1)),
         };
 
-        public static Fist to_fist(IEnumerable vals) => to_fist((IEnumerable<object>)vals);
+        /// <summary>
+        /// Converts a given <see cref="IEnumerable"/> to a <see cref="Fist"/>.
+        /// </summary>
+        /// <param name="vals">Collection of items that the new <see cref="Fist"/> should contain in order</param>
+        /// <returns><see cref="Fist"/> containing the items in <paramref name="vals"/></returns>
+        /// <remarks>
+        /// The <see cref="Fist"/> creation is done in a lazy manner. Each item in <paramref name="vals"/>
+        /// is enumerated over only as the <see cref="Fist"/> is traversed.
+        /// </remarks>
+        public static Fist to_fist(IEnumerable vals) => to_fist((IEnumerable<dynamic>)vals);
 
+        /// <summary>
+        /// Tests equality between two <see cref="Fist"/> instances.
+        /// </summary>
+        /// <param name="left"></param>
+        /// <param name="right"></param>
+        /// <returns></returns>
+        /// <remarks>
+        /// Testing equality of two <see cref="Fist"/> instances causes them to be traversed in parallel,
+        /// meaning that any delayed lazy traversal costs will be incurred at the time of this call. However,
+        /// traversal stops at the first pair of <see cref="Head"/> elements that are not equal.
+        ///
+        /// Two fists are considered equal if their items, traversed in parallel, are each equal as
+        /// determined by a call to <see cref="object.Equals(object, object)"/>.
+        /// </remarks>
         public static bool equals(Fist left, Fist right) => (left, right) switch
         {
             (Nilf _, Nilf _) => true,
             ((_, _), Nilf _) => false,
             (Nilf _, (_, _)) => false,
-            ((var headL, Fist tailL), (var headR, Fist tailR)) when headL.Equals(headR) => equals(tailL, tailR),
+            ((var headL, Fist tailL), (var headR, Fist tailR)) when object.Equals(headL, headR) => equals(tailL, tailR),
             _ => false,
         };
 
-        public static int hash_code(Fist list) => reduce(list, (x, acc) => 486187739 * acc + (x.GetHashCode()));
+        /// <summary>
+        /// Generates a hash code for a <see cref="Fist"/>
+        /// </summary>
+        /// <param name="list"><see cref="Fist"/> to generate hash code for</param>
+        /// <returns>Generated hash code</returns>
+        /// <remarks>
+        /// Calculating a hash code for a <see cref="Fist"/> causes it to be traversed, meaning that any
+        /// delayed lazy traversal costs will be incurred at the time of this call.
+        /// </remarks>
+        public static int hash_code(Fist list) => reduce(list, 0, (x, acc) => 486187739 * acc + (x.GetHashCode()));
 
         #region Fist types
 
         /// <summary>
-        /// Nil list
+        /// Nil list. Use <see cref="nilf"/> to get an instance.
         /// </summary>
         public readonly struct Nilf : Fist
         {
+            /// <summary>
+            /// <see cref="Nilf"/> deconstructs into (<see cref="nilf"/>, <see cref="nilf"/>).
+            /// </summary>
+            /// <param name="head">Will be <see cref="nilf"/></param>
+            /// <param name="tail">Will be <see cref="nilf"/></param>
             public void Deconstruct(out dynamic head, out Fist tail)
             {
-                head = null;
-                tail = null;
+                head = nilf;
+                tail = nilf;
             }
 
-            public dynamic Head => null;
-            public Fist Tail => null;
+            /// <summary>
+            /// Gets <see cref="nilf"/>
+            /// </summary>
+            public dynamic Head => nilf;
+
+            /// <summary>
+            /// Gets <see cref="nilf"/>
+            /// </summary>
+            public Fist Tail => nilf;
+
+            /// <summary>
+            /// Always <c>true</c>
+            /// </summary>
             public bool IsNil => true;
+
+            /// <summary>
+            /// Tests equality
+            /// </summary>
+            /// <param name="obj">Object to test against</param>
+            /// <returns><c>true</c> for any other <see cref="Nilf"/>, else <c>false</c></returns>
+            public override bool Equals(object obj) => obj != null && obj is Fist && equals(this, (Fist)obj);
+
+            /// <summary>
+            /// Hash code for <see cref="Nilf"/> is always 0;
+            /// </summary>
+            /// <returns></returns>
+            public override int GetHashCode() => hash_code(this);
         }
 
         /// <summary>

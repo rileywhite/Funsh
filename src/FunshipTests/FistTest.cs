@@ -35,6 +35,14 @@ namespace FunshipTests
             var mappedList = map(fist(1, 2, 3, 4), x => 2 * x);
 
             Assert.Equal(fist(2, 4, 6, 8), list);
+            Assert.Equal(fist(2, 4, 6, 8).GetHashCode(), list.GetHashCode());
+
+            Assert.Equal(nilf, nilf);
+            Assert.Equal(nilf.GetHashCode(), nilf.GetHashCode());
+            Assert.Equal(nilf.GetHashCode(), 0);
+
+            Assert.NotEqual(fist(2, 4, 6, 8), nilf);
+            Assert.NotEqual(fist(2, 4, 6, 8).GetHashCode(), nilf.GetHashCode());
 
             Assert.Equal(fist(2, 4, 6, 8), mappedList);
             Assert.Equal(fist(2, 4, 6, 8).GetHashCode(), mappedList.GetHashCode());
