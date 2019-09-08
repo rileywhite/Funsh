@@ -131,14 +131,16 @@ namespace Funship.Tests
         }
 
         [Fact]
-        public void can_compose_two_funs()
+        public void can_compose()
         {
             var f = funf(x => x - 2);
             var g = funf(y => y * 2);
 
             var h = compose(f, g);
+            var i = compose(h, f);
 
             Assert.Equal(16, call(h, 10));
+            Assert.Equal(14, call(i, 10));
         }
     }
 }

@@ -30,13 +30,9 @@ namespace Funship
         public static dynamic call(Funf f, IEnumerable<dynamic> args) => f switch
         {
             WFunf fun => fun.invoke_func(args),
-            PFunf fun => fun.call(args),
-            _ => args switch
-            {
-                Nilf _ => f.call(),
-                Fist _ => call(capture(f, args)),
-                _ => true,
-            },
+            PFunf fun => fun.collect_args_and_call(args),
+            CFunf fun => fun.collect_args_and_call(args),
+            _ => throw new NotSupportedException(),
         };
 
         public static Funf capture(Funf f, params dynamic[] args) => capture(f, to_fist(args));

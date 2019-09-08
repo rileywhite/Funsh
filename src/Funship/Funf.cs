@@ -226,9 +226,10 @@ namespace Funship
             private Funf f { get; }
             public IEnumerable<dynamic> args { get; }
             public int arity { get; }
-            dynamic Funf.call() => this.call(nilf);
+            dynamic Funf.call() => this.collect_args_and_call();
 
-            public dynamic call(IEnumerable<dynamic> moreArgs) => Funf.call(f, this.args.Concat(moreArgs));
+            public dynamic collect_args_and_call(params dynamic[] moreArgs) => this.collect_args_and_call(moreArgs.AsEnumerable());
+            public dynamic collect_args_and_call(IEnumerable<dynamic> moreArgs) => call(f, this.args.Concat(moreArgs));
         }
 
         /// <summary>
@@ -248,7 +249,19 @@ namespace Funship
             private Funf g { get; }
             public IEnumerable<dynamic> args { get; }
             public int arity { get; }
-            dynamic Funf.call() => throw new NotImplementedException();
+            dynamic Funf.call() => this.collect_args_and_call();
+
+
+            public dynamic collect_args_and_call(params dynamic[] moreArgs) => this.collect_args_and_call(moreArgs.AsEnumerable());
+            public dynamic collect_args_and_call(IEnumerable<dynamic> moreArgs)
+            {
+                var allArgs = this.args.Concat(moreArgs).ToArray();
+                return allArgs.Length switch
+                {
+                    var l when l < f.arity => new CFunf(f, g, f.arity + g.arity - l, allArgs),
+                    _ => call(g, call(f, allArgs))
+                };
+            }
         }
     }
 }
