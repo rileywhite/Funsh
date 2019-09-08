@@ -26,20 +26,28 @@ namespace Funship
     {
         public static Funf compose(Funf f, Funf g) => new CFunf(f, g, g.arity + f.arity - 1, nilf);
 
+        public static (Funf, IEnumerable<dynamic> args) capture_and_compose(Funf g, params dynamic[] args) => capture_and_compose(g, args.AsEnumerable());
+        public static (Funf, IEnumerable<dynamic> args) capture_and_compose(Funf g, IEnumerable<dynamic> args) =>
+            args.SkipWhile(arg => !(arg is Funf)) switch
+            {
+                var empty when !empty.Any() => (g, args),
+                var f_and_args => (compose(capture(f_and_args.First(), f_and_args.Skip(1)), g), args.TakeWhile(arg => !(arg is Funf))),
+            };
+
         public static dynamic call(Funf f, params dynamic[] args) => call(f, args.AsEnumerable());
-        public static dynamic call(Funf f, IEnumerable<dynamic> args) => f switch
+        public static dynamic call(Funf f, IEnumerable<dynamic> args) => capture_and_compose(f, args) switch
         {
-            WFunf fun => fun.invoke_func(args),
-            PFunf fun => fun.collect_args_and_call(args),
-            CFunf fun => fun.collect_args_and_call(args),
+            (WFunf fun, var final_args) => fun.invoke_func(final_args),
+            (PFunf fun, var final_args) => fun.collect_args_and_call(final_args),
+            (CFunf fun, var final_args) => fun.collect_args_and_call(final_args),
             _ => throw new NotSupportedException(),
         };
 
         public static Funf capture(Funf f, params dynamic[] args) => capture(f, to_fist(args));
-        public static Funf capture(Funf f, IEnumerable<dynamic> args) => args switch
+        public static Funf capture(Funf f, IEnumerable<dynamic> args) => capture_and_compose(f, args) switch
         {
-            Nilf _ => f,
-            _ => capture(new PFunf(f, args, f.arity - args.Count())),
+            (var fun, var empty) when !empty.Any() => fun,
+            (var fun, var final_args) => capture(new PFunf(fun, final_args, fun.arity - final_args.Count())),
         };
     }
 }
