@@ -43,15 +43,15 @@ namespace Sandbox
             Console.WriteLine(max);                            // Prints 999 in debug mode and 9999999 in release
 
             var fun = funf(x => x + 1);
-            Console.WriteLine(fun.x(10));
+            Console.WriteLine(call(fun, 10));
 
             var twoparam = funf((x, y) => x - y);
-            Funship.Funf oneparam = twoparam.x(6);
-            Console.WriteLine(oneparam.x(2));
+            Funship.Funf oneparam = call(twoparam, 6);
+            Console.WriteLine(call(oneparam, 2));
 
-            var partialCallOneParam = twoparam[6];
-            var partialCallZeroParam = partialCallOneParam[1];
-            Console.WriteLine(partialCallZeroParam.x());
+            var partialCallOneParam = capture(twoparam, 6);
+            var partialCallZeroParam = capture(partialCallOneParam, 1);
+            Console.WriteLine(call(partialCallZeroParam));
 
             Console.WriteLine($"Everything greater than 5? {all(fist(6, 7, 8, 9), funf(x => x > 5))}");
             Console.WriteLine($"Is this other stuff greater than 5? {all(fist(6, 4, 8, 9), funf(x => x > 5))}");

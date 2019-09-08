@@ -173,5 +173,46 @@ namespace Funship.Tests
             Assert.Equal(fist(1), reverse(fist(1)));
             Assert.Equal(fist(1, 2, 3, 4, 5), reverse(fist(5, 4, 3, 2, 1)));
         }
+
+        [Fact]
+        public void can_create_fist_from_head_and_tail()
+        {
+            var head = 15;
+            var tail = fist(1, 2, 3, 4, 5);
+
+            var headAndTail = fist(head, tail);
+            var headAndEmpty = fist(head, nilf);
+
+            Assert.Equal(fist(15, 1, 2, 3, 4, 5), headAndTail);
+            Assert.Equal(fist(15), headAndEmpty);
+        }
+
+        [Fact]
+        public void can_enumerate_nilf()
+        {
+            var touched = false;
+
+            foreach(var item in nilf)
+            {
+                touched = true;
+            }
+
+            Assert.False(touched);
+        }
+
+        [Fact]
+        public void can_enumerate_fist()
+        {
+            var items = new[] { 1, 2, 3, 4, 5 };
+            var list = fist(1, 2, 3, 4, 5);
+
+            var i = 0;
+            foreach(var item in list)
+            {
+                Assert.Equal(items[i], item);
+                ++i;
+            }
+            Assert.Equal(5, i);
+        }
     }
 }

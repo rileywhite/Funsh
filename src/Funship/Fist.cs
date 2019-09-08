@@ -54,7 +54,7 @@ namespace Funship
     ///     };
     /// }
     /// </example>
-    public partial interface Fist
+    public partial interface Fist : IEnumerable<object>
     {
         /// <summary>
         /// Provides a <see cref="ValueTuple{dynamic, Fist}"/> deconstruction of the <see cref="Fist"/>
@@ -85,6 +85,18 @@ namespace Funship
         public static readonly Fist nilf = new Nilf();
 
         /// <summary>
+        /// Creates a new <see cref="Fist"/> by appending a head to an existing tail.
+        /// </summary>
+        /// <param name="head"></param>
+        /// <param name="tail"></param>
+        /// <returns></returns>
+        public static Fist fist(dynamic head, Fist tail) => head switch
+        {
+            Nilf _ => nilf,
+            _ => new SFist(head, tail),
+        };
+
+        /// <summary>
         /// Creates a new <see cref="Fist"/> from a given set of values
         /// </summary>
         /// <param name="vals">Values to add to a list</param>
@@ -96,7 +108,6 @@ namespace Funship
         /// </remarks>
         public static Fist fist(params dynamic[] vals) => vals switch
         {
-            null => nilf,
             _ when vals.Length == 1 && vals[0] == null => nilf,
             _ => to_fist(vals.AsEnumerable()),
         };
@@ -163,6 +174,35 @@ namespace Funship
         /// </remarks>
         public static int hash_code(Fist list) => reduce(list, 0, (x, acc) => 486187739 * acc + (x.GetHashCode()));
 
+        public static IEnumerator<object> enumerator(Fist list) => new FistEnumerator(list);
+
+        private class FistEnumerator : IEnumerator<object>
+        {
+            public FistEnumerator(Fist list)
+            {
+                // the nullable logic is here because MoveNext is called before the first value is read
+                this.InitialList = list;
+                this.List = default(Fist?);
+            }
+
+            private Fist InitialList { get; set; }
+#nullable enable
+            private Fist? List { get; set; }
+#nullable disable
+
+            public object Current => this.List.Head;
+
+            public void Dispose()
+            {
+                this.InitialList = nilf;
+                this.List = null;
+            }
+
+            public bool MoveNext() => !(this.List = this.List == null ? this.InitialList : this.List.Tail).IsNil;
+
+            public void Reset() => this.List = null;
+        }
+
         #region Fist types
 
         /// <summary>
@@ -210,6 +250,9 @@ namespace Funship
             /// </summary>
             /// <returns></returns>
             public override int GetHashCode() => hash_code(this);
+
+            IEnumerator IEnumerable.GetEnumerator() => this.GetEnumerator();
+            public IEnumerator<object> GetEnumerator() => enumerator(this);
         }
 
         /// <summary>
@@ -219,14 +262,14 @@ namespace Funship
         {
             internal SFist(dynamic head)
             {
-                if (head == null) { throw new ArgumentException("SFist cannot contain a null value"); }
+                if (nilf.Equals(head)) { throw new ArgumentException("DFist head cannot be nilf"); }
                 this.Head = head;
                 this.Tail = nilf;
             }
 
             internal SFist(dynamic head, Fist tail)
             {
-                if (head == null) { throw new ArgumentException("SFist cannot contain a null value"); }
+                if (nilf.Equals(head)) { throw new ArgumentException("DFist head cannot be nilf"); }
                 this.Head = head;
                 this.Tail = tail;
             }
@@ -242,11 +285,13 @@ namespace Funship
             public bool IsNil => false;
 
 #nullable enable
-            public override bool Equals(object? obj) =>
-                obj != null && obj is Fist && equals(this, (Fist)obj);
+            public override bool Equals(object? obj) => obj != null && obj is Fist && equals(this, (Fist)obj);
 #nullable disable
 
             public override int GetHashCode() => hash_code(this);
+
+            IEnumerator IEnumerable.GetEnumerator() => this.GetEnumerator();
+            public IEnumerator<object> GetEnumerator() => enumerator(this);
         }
 
         /// <summary>
@@ -256,7 +301,7 @@ namespace Funship
         {
             internal DFist(dynamic head, IEnumerable<T> tail)
             {
-                if (head == null) { throw new ArgumentException("DFist cannot contain a null value"); }
+                if (nilf.Equals(head)) { throw new ArgumentException("DFist head cannot be nilf"); }
                 this.Head = head;
                 this.Tail = new Lazy<Fist>(() => tail.Any() ? new DFist<T>(tail.First(), tail.Skip(1)) : nilf);
             }
@@ -274,10 +319,15 @@ namespace Funship
 
             public bool IsNil => false;
 
-            public override bool Equals(object obj) =>
-                obj != null && obj is Fist && equals(this, (Fist)obj);
+
+#nullable enable
+            public override bool Equals(object? obj) => obj != null && obj is Fist && equals(this, (Fist)obj);
+#nullable disable
 
             public override int GetHashCode() => hash_code(this);
+
+            IEnumerator IEnumerable.GetEnumerator() => this.GetEnumerator();
+            public IEnumerator<object> GetEnumerator() => enumerator(this);
         }
 
         /// <summary>
@@ -293,7 +343,6 @@ namespace Funship
                         this.Head = new Lazy<dynamic>(() =>
                         {
                             var h = fun(head);
-                            if (h == null) { throw new ArgumentException("MFist cannot map to a null value"); }
                             return h;
                         });
                         this.Tail = new Lazy<Fist>(() => nilf);
@@ -303,7 +352,6 @@ namespace Funship
                         this.Head = new Lazy<dynamic>(() =>
                         {
                             var h = fun(src.Head);
-                            if (h == null) { throw new ArgumentException("MFist cannot map to a null value"); }
                             return h;
                         });
                         this.Tail = new Lazy<Fist>(() => new MFist(src.Tail, fun));
@@ -325,10 +373,15 @@ namespace Funship
 
             public bool IsNil => false;
 
-            public override bool Equals(object obj) =>
-                obj != null && obj is Fist && equals(this, (Fist)obj);
+
+#nullable enable
+            public override bool Equals(object? obj) => obj != null && obj is Fist && equals(this, (Fist)obj);
+#nullable disable
 
             public override int GetHashCode() => hash_code(this);
+
+            IEnumerator IEnumerable.GetEnumerator() => this.GetEnumerator();
+            public IEnumerator<object> GetEnumerator() => enumerator(this);
         }
 
         #endregion

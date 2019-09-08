@@ -15,11 +15,35 @@
 /***************************************************************************/
 
 using System;
+using System.Collections.Generic;
+using System.Linq;
+
+using static Funship.Fist;
 
 namespace Funship
 {
     public partial interface Funf
     {
-        public static Funf compose(Funf f, Funf g) => funf(z => g.x(f.x(z))); // ideally, this could be g[f];
+        public static Funf compose(Funf f, Funf g) => new CFunf(f, g, g.arity + f.arity - 1, nilf);
+
+        public static dynamic call(Funf f, params dynamic[] args) => call(f, args.AsEnumerable());
+        public static dynamic call(Funf f, IEnumerable<dynamic> args) => f switch
+        {
+            WFunf fun => fun.invoke_func(args),
+            PFunf fun => fun.call(args),
+            _ => args switch
+            {
+                Nilf _ => f.call(),
+                Fist _ => call(capture(f, args)),
+                _ => true,
+            },
+        };
+
+        public static Funf capture(Funf f, params dynamic[] args) => capture(f, to_fist(args));
+        public static Funf capture(Funf f, IEnumerable<dynamic> args) => args switch
+        {
+            Nilf _ => f,
+            _ => capture(new PFunf(f, args, f.arity - args.Count())),
+        };
     }
 }

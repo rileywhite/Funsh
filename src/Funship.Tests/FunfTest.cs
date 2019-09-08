@@ -1,7 +1,7 @@
 ﻿/***************************************************************************/
 // Copyright 2019 Riley White
 // 
-// Licensed under the Apache License, Version 2.0 (the "License");
+// Licensed under the Apache License, Version 2.0 (the "License"));
 // you may not use this file eacept in compliance with the License.
 // You may obtain a copy of the License at
 // 
@@ -15,6 +15,7 @@
 /***************************************************************************/
 
 using System;
+using System.Collections.Generic;
 using Xunit;
 
 using static Funship.Fist;
@@ -63,23 +64,70 @@ namespace Funship.Tests
             Assert.Equal(15, fun15.arity);
             Assert.Equal(16, fun16.arity);
 
-            Assert.Equal(0, fun0.x());
-            Assert.Equal((1).GetHashCode(), fun1.x(1));
-            Assert.Equal((1, 2).GetHashCode(), fun2.x(1, 2));
-            Assert.Equal((1, 2, 3).GetHashCode(), fun3.x(1, 2, 3));
-            Assert.Equal((1, 2, 3, 4).GetHashCode(), fun4.x(1, 2, 3, 4));
-            Assert.Equal((1, 2, 3, 4, 5).GetHashCode(), fun5.x(1, 2, 3, 4, 5));
-            Assert.Equal((1, 2, 3, 4, 5, 6).GetHashCode(), fun6.x(1, 2, 3, 4, 5, 6));
-            Assert.Equal((1, 2, 3, 4, 5, 6, 7).GetHashCode(), fun7.x(1, 2, 3, 4, 5, 6, 7));
-            Assert.Equal((1, 2, 3, 4, 5, 6, 7, 8).GetHashCode(), fun8.x(1, 2, 3, 4, 5, 6, 7, 8));
-            Assert.Equal((1, 2, 3, 4, 5, 6, 7, 8, 9).GetHashCode(), fun9.x(1, 2, 3, 4, 5, 6, 7, 8, 9));
-            Assert.Equal((1, 2, 3, 4, 5, 6, 7, 8, 9, 10).GetHashCode(), fun10.x(1, 2, 3, 4, 5, 6, 7, 8, 9, 10));
-            Assert.Equal((1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11).GetHashCode(), fun11.x(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11));
-            Assert.Equal((1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12).GetHashCode(), fun12.x(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12));
-            Assert.Equal((1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13).GetHashCode(), fun13.x(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13));
-            Assert.Equal((1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14).GetHashCode(), fun14.x(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14));
-            Assert.Equal((1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15).GetHashCode(), fun15.x(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15));
-            Assert.Equal((1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16).GetHashCode(), fun16.x(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16));
+            Assert.Equal(0, call(fun0));
+            Assert.Equal((1).GetHashCode(), call(fun1, 1));
+            Assert.Equal((1, 2).GetHashCode(), call(fun2, 1, 2));
+            Assert.Equal((1, 2, 3).GetHashCode(), call(fun3, 1, 2, 3));
+            Assert.Equal((1, 2, 3, 4).GetHashCode(), call(fun4, 1, 2, 3, 4));
+            Assert.Equal((1, 2, 3, 4, 5).GetHashCode(), call(fun5, 1, 2, 3, 4, 5));
+            Assert.Equal((1, 2, 3, 4, 5, 6).GetHashCode(), call(fun6, 1, 2, 3, 4, 5, 6));
+            Assert.Equal((1, 2, 3, 4, 5, 6, 7).GetHashCode(), call(fun7, 1, 2, 3, 4, 5, 6, 7));
+            Assert.Equal((1, 2, 3, 4, 5, 6, 7, 8).GetHashCode(), call(fun8, 1, 2, 3, 4, 5, 6, 7, 8));
+            Assert.Equal((1, 2, 3, 4, 5, 6, 7, 8, 9).GetHashCode(), call(fun9, 1, 2, 3, 4, 5, 6, 7, 8, 9));
+            Assert.Equal((1, 2, 3, 4, 5, 6, 7, 8, 9, 10).GetHashCode(), call(fun10, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10));
+            Assert.Equal((1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11).GetHashCode(), call(fun11, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11));
+            Assert.Equal((1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12).GetHashCode(), call(fun12, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12));
+            Assert.Equal((1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13).GetHashCode(), call(fun13, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13));
+            Assert.Equal((1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14).GetHashCode(), call(fun14, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14));
+            Assert.Equal((1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15).GetHashCode(), call(fun15, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15));
+            Assert.Equal((1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16).GetHashCode(), call(fun16, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16));
+        }
+
+        [Fact]
+        public void can_call_with_one_captured_arg()
+        {
+            var f = funf((x, y, z) => x + y - z);
+            var g = capture(f, 2);
+            Assert.Equal(-13, call(g, 3, 18));
+        }
+
+        [Fact]
+        public void can_call_with_multiple_captured_arg()
+        {
+            var f = funf((x, y, z) => x + y - z);
+            var g = capture(f, 2, 3);
+            Assert.Equal(-13, call(g, 18));
+        }
+
+        [Fact]
+        public void can_call_with_two_separate_captured_arg()
+        {
+            var f = funf((x, y, z) => x + y - z);
+            var g = capture(f, 2);
+            var h = capture(g, 3);
+
+            Assert.Equal(-9, call(f, 5, 4, 18));
+            Assert.Equal(-12, call(g, 4, 18));
+            Assert.Equal(-13, call(h, 18));
+        }
+
+        [Fact]
+        public void can_call_with_extra_args()
+        {
+            var f = funf(x => 3 * x);
+            Assert.Equal(new dynamic[] { 3, 2 }, call(f, 1, 2));
+        }
+
+        [Fact]
+        public void can_call_with_captured_args_and_extra_args()
+        {
+            var f = funf((x, y, z) => x + y - z);
+            var g = capture(f, 2);
+            var h = capture(g, 3);
+
+            Assert.Equal(new dynamic[] { -9, 44, 23 }, call(f, 5, 4, 18, 44, 23));
+            Assert.Equal(new dynamic[] { -12, 44, 23 }, call(g, 4, 18, 44, 23));
+            Assert.Equal(new dynamic[] { -13, 44, 23 }, call(h, 18, 44, 23));
         }
 
         [Fact]
@@ -90,7 +138,7 @@ namespace Funship.Tests
 
             var h = compose(f, g);
 
-            Assert.Equal(16, h.x(10));
+            Assert.Equal(16, call(h, 10));
         }
     }
 }

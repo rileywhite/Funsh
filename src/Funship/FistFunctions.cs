@@ -17,6 +17,8 @@
 using System;
 using System.IO;
 
+using static Funship.Funf;
+
 namespace Funship
 {
     public partial interface Fist
@@ -83,8 +85,7 @@ namespace Funship
         public static dynamic reduce(Fist list, dynamic acc, Func<dynamic, dynamic, dynamic> fun) => list switch
         {
             Nilf _ => acc,
-            (var head, var tail) => reduce(tail, fun(head, acc), fun),
-            _ => throw new ArgumentException("No match for value", nameof(list)),
+            (var head, Fist tail) => reduce(tail, fun(head, acc), fun),
         };
 
         /// <summary>
@@ -226,7 +227,7 @@ namespace Funship
         public static bool all(Fist list, Funf fun) => list switch
         {
             Nilf _ => true,
-            (var head, _) when !fun.x(head) => false,
+            (var head, _) when !call(fun, head) => false,
             (_, Fist tail) => all(tail, fun),
         };
 
@@ -248,7 +249,7 @@ namespace Funship
         public static bool any(Fist list, Funf fun) => list switch
         {
             Nilf _ => false,
-            (var head, _) when fun.x(head) => true,
+            (var head, _) when call(fun, head) => true,
             (_, Fist tail) => any(tail, fun),
         };
     }
