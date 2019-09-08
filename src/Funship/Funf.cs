@@ -19,7 +19,7 @@ using System.Linq;
 
 namespace Funship
 {
-    public interface Funf
+    public partial interface Funf
     {
         /// <summary>
         /// Number of arguments the <see cref="Funf"/> needs before execution can complete

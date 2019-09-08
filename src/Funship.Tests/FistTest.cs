@@ -23,7 +23,7 @@ using Xunit;
 using static Funship.Fist;
 using static Funship.Funf;
 
-namespace FunshipTests
+namespace Funship.Tests
 {
     public class FistTest
     {
