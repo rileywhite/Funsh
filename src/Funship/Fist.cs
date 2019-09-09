@@ -170,7 +170,7 @@ namespace Funship
         /// </remarks>
         public static int hash_code(Fist list) => reduce(list, 0, (x, acc) => 486187739 * acc + (x.GetHashCode()));
 
-        public static IEnumerator<object> enumerator(Fist list) => new FistEnumerator(list);
+        private static IEnumerator<object> enumerator(Fist list) => new FistEnumerator(list);
 
         private class FistEnumerator : IEnumerator<object>
         {
@@ -247,8 +247,8 @@ namespace Funship
             /// <returns></returns>
             public override int GetHashCode() => hash_code(this);
 
-            IEnumerator IEnumerable.GetEnumerator() => this.GetEnumerator();
-            public IEnumerator<object> GetEnumerator() => enumerator(this);
+            IEnumerator IEnumerable.GetEnumerator() => (this as IEnumerable<object>).GetEnumerator();
+            IEnumerator<object> IEnumerable<object>.GetEnumerator() => enumerator(this);
         }
 
         /// <summary>
