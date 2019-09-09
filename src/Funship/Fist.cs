@@ -27,8 +27,7 @@ namespace Funship
     /// which reprents the remainder of the functional list without the tail.
     /// </summary>
     /// <remarks>
-    /// Create a fist using <see cref="fist(dynamic[])"/>, <see cref="to_fist(IEnumerable)"/>,
-    /// or <see cref="to_fist{T}(IEnumerable{T})"/>.
+    /// Create a fist using <see cref="fist(dynamic[])"/> or <see cref="to_fist{T}(IEnumerable{T})"/>.
     /// 
     /// A <see cref="Fist"/> can be matched as a <see cref="ValueTuple{dynamic, Fist}"/>
     /// in a <c>switch</c> statement.
@@ -106,6 +105,10 @@ namespace Funship
         /// 1. When <paramref name="vals"/> is empty, i.e. no values are passed in the call.
         /// 2. When a single <c>null</c> is passed.
         /// </remarks>
+        /// <example>
+        /// var list = fist(1, 2, 3, 4);    // list = Fist with head 1 and tail of fist(2, 3, 4)
+        /// var empty_list = fist();        // empty_list = <see cref="nilf"/>
+        /// </example>
         public static Fist fist(params dynamic[] vals) => vals switch
         {
             _ when vals.Length == 1 && vals[0] == null => nilf,
@@ -122,23 +125,16 @@ namespace Funship
         /// The <see cref="Fist"/> creation is done in a lazy manner. Each item in <paramref name="vals"/>
         /// is enumerated over only as the <see cref="Fist"/> is traversed.
         /// </remarks>
+        /// <example>
+        /// var list = to_fist(new [] { 1, 2, 3, 4 });    // list = Fist with head 1 and tail of fist(2, 3, 4)
+        /// var empty_list = to_fist(new object[0]);      // empty_list = <see cref="nilf"/>
+        /// </example>
         public static Fist to_fist<T>(IEnumerable<T> vals) => vals switch
         {
             null => nilf,
             _ when !vals.Any() => nilf,
             _ => new DFist<T>(vals.First(), vals.Skip(1)),
         };
-
-        /// <summary>
-        /// Converts a given <see cref="IEnumerable"/> to a <see cref="Fist"/>.
-        /// </summary>
-        /// <param name="vals">Collection of items that the new <see cref="Fist"/> should contain in order</param>
-        /// <returns><see cref="Fist"/> containing the items in <paramref name="vals"/></returns>
-        /// <remarks>
-        /// The <see cref="Fist"/> creation is done in a lazy manner. Each item in <paramref name="vals"/>
-        /// is enumerated over only as the <see cref="Fist"/> is traversed.
-        /// </remarks>
-        public static Fist to_fist(IEnumerable vals) => to_fist((IEnumerable<dynamic>)vals);
 
         /// <summary>
         /// Tests equality between two <see cref="Fist"/> instances.

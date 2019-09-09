@@ -18,189 +18,376 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-using static Funship.Fist;
-
 namespace Funship
 {
+    /// <summary>
+    /// Represents a functional-style function.
+    /// </summary>
+    /// <remarks>
+    /// A basic <see cref="Funf"/> is a container for one of the various <see cref="Func{TResult}"/>
+    /// types, of which there are 17 variants (0 to 16 arguments). See the overloads of <see cref="funf(Func{dynamic})"/>
+    /// for a full list of functional delegate types that can be wrapped.
+    ///
+    /// They can get more advanced.
+    ///
+    /// For example, when a <see cref="Funf"/> is called via <see cref="call(Funf, dynamic[])"/>,
+    /// depending on the number of arguments passed and the <see cref="arity"/>, it may be partially called,
+    /// fully called, or even overflowed, returning its own return value along with the extra arguments.
+    /// See documentation for <see cref="call(Funf, dynamic[])"/> for more information.
+    ///
+    /// A <see cref="Funf"/> may also capture arguments without attempting to execute via a call to
+    /// <see cref="capture(Funf, dynamic[])"/>. This creates a new <see cref="Funf"/>
+    /// that encloses the passed arguments such that they will be used at the time the <see cref="Funf"/>
+    /// is called.
+    ///
+    /// Additionally, calling <see cref="compose(Funf, Funf)"/> allows you to create a new
+    /// function <c>h</c> that composes given functions <c>f</c> and <c>g</c> such that
+    /// upon being called, <c>h</c> applies arguments to <c>f</c> until <c>f</c> can be executed,
+    /// at which time any results from <c>f</c> are applied to <c>g</c> along with any remaining
+    /// arguments that were not used by <c>f</c>.
+    ///
+    /// Any time a <see cref="Funf"/> is passed as an argument to <see cref="call(Funf, dynamic[])"/>
+    /// or <see cref="capture(Funf, dynamic[])"/>, the returned <see cref="Funf"/> will compose the
+    /// argument Funf together with the original.
+    /// </remarks>
+    /// <seealso cref="call(Funf, dynamic[])"/>
+    /// <seealso cref="capture(Funf, dynamic[])"/>
+    /// <seealso cref="compose(Funf, Funf)"/>
     public partial interface Funf
     {
         /// <summary>
-        /// Number of arguments the <see cref="Funf"/> needs before execution can complete
+        /// Gets the number of arguments the <see cref="Funf"/> needs before it can be fully called.
         /// </summary>
+        /// <remarks>
+        /// This may be a negative number indicating that the arguments are overflowing. If such a
+        /// <see cref="Funf"/> is called, then the return value will be an <see cref="IEnumerable{dynamic}"/>
+        /// with the return value as the first item followed by the unneeded arguments.
+        /// </remarks>
         int arity { get; }
-
-        IEnumerable<dynamic> args { get; }
-
-        /// <summary>
-        /// Gets a version of the <see cref="Funf"/> that is partially called with the given set of arguments.
-        /// </summary>
-        /// <remarks>
-        /// All arguments may be supplied, in which case the return Funf may be executed at any time by calling
-        /// <see cref="call"/> with no arguments.
-        ///
-        /// Differs from <see cref="call(dynamic[])"/> in these ways:
-        /// 1. The <see cref="Funf"/> will never be executed.
-        /// 2. A new <see cref="Funf"/> will be created with the new set of collected arguments, but no additional hierarchy depth of closures will be created.
-        /// </remarks>
-        /// <param name="args"></param>
-        /// <returns>Partially called <see cref="Funf"/></returns>
-        //public Funf this[params dynamic[] args] { get; }
-
-        /// <summary>
-        /// If length of <paramref name="args"/> matches <see cref="arity"/>, then executes the <see cref="Funf"/> and returns
-        /// the result. Otherwise, returns a <see cref="Funf"/> that is partially called with the given set of arguments.
-        /// </summary>
-        /// <remarks>
-        /// Differs from <see cref="this[dynamic[]]"/> in these ways:
-        /// 1. The <see cref="Funf"/> will be executed if enough arguments are passed.
-        /// 2. If too few arguments are passed, then a new closure is created that encloses the arguments received so far and that expects the remaining arguments.
-        /// 3. If too many arguments are passed, then execution will occur. The return value will be converted into a Funf if necessary, and <see cref="call(dynamic[])"/> will be invoked with the remaining arguments.
-        /// </remarks>
-        /// <param name="args"></param>
-        /// <returns></returns>
-        dynamic call();
 
         #region Factories
 
+        /// <summary>
+        /// Creates a new <see cref="Funf"/> from a given
+        /// <see cref="Func{TResult}"/>
+        /// </summary>
+        /// <param name="func">Function that will be executed upon successful call</param>
+        /// <returns>New <see cref="Funf"/></returns>
+        /// <example>
+        /// var f = Funf(() => 0);
+        /// var x = call(f);        // x = 0
+        /// </example>
         public static Funf funf(Func<dynamic> func) => new WFunf(func);
+
+        /// <summary>
+        /// Creates a new <see cref="Funf"/> from a given
+        /// <see cref="Func{T1, TResult}"/>
+        /// </summary>
+        /// <param name="func">Function that will be executed upon successful call</param>
+        /// <returns>New <see cref="Funf"/></returns>
+        /// <example>
+        /// var f = Funf((arg) => arg);
+        /// var x = call(f, 1);        // x = 1
+        /// </example>
         public static Funf funf(Func<dynamic, dynamic> func) => new WFunf(func);
+
+        /// <summary>
+        /// Creates a new <see cref="Funf"/> from a given
+        /// <see cref="Func{T1, T2, TResult}"/>
+        /// </summary>
+        /// <param name="func">Function that will be executed upon successful call</param>
+        /// <returns>New <see cref="Funf"/></returns>
+        /// <example>
+        /// var f = Funf((a1, a2) => a1 + a2);
+        /// var x = call(f, 1, 1);        // x = 2
+        /// </example>
         public static Funf funf(Func<dynamic, dynamic, dynamic> func) => new WFunf(func);
+
+        /// <summary>
+        /// Creates a new <see cref="Funf"/> from a given
+        /// <see cref="Func{T1, T2, T3, TResult}"/>
+        /// </summary>
+        /// <param name="func">Function that will be executed upon successful call</param>
+        /// <returns>New <see cref="Funf"/></returns>
+        /// <example>
+        /// var f = Funf((a1, a2, a3) => a1 + a2 + a3);
+        /// var x = call(f, 1, 1, 1);        // x = 3
+        /// </example>
         public static Funf funf(Func<dynamic, dynamic, dynamic, dynamic> func) => new WFunf(func);
+
+        /// <summary>
+        /// Creates a new <see cref="Funf"/> from a given
+        /// <see cref="Func{T1, T2, T3, T4, TResult}"/>
+        /// </summary>
+        /// <param name="func">Function that will be executed upon successful call</param>
+        /// <returns>New <see cref="Funf"/></returns>
+        /// <example>
+        /// var f = Funf((a1, a2, a3, a4) => a1 + a2 + a3 + a4);
+        /// var x = call(f, 1, 1, 1, 1);        // x = 4
+        /// </example>
         public static Funf funf(Func<dynamic, dynamic, dynamic, dynamic, dynamic> func) => new WFunf(func);
+
+        /// <summary>
+        /// Creates a new <see cref="Funf"/> from a given
+        /// <see cref="Func{T1, T2, T3, T4, T5, TResult}"/>
+        /// </summary>
+        /// <param name="func">Function that will be executed upon successful call</param>
+        /// <returns>New <see cref="Funf"/></returns>
+        /// <example>
+        /// var f = Funf((a1, a2, a3, a4, a5) => a1 + a2 + a3 + a4 + a5);
+        /// var x = call(f, 1, 1, 1, 1, 1);        // x = 5
+        /// </example>
         public static Funf funf(Func<dynamic, dynamic, dynamic, dynamic, dynamic, dynamic> func) => new WFunf(func);
+
+        /// <summary>
+        /// Creates a new <see cref="Funf"/> from a given
+        /// <see cref="Func{T1, T2, T3, T4, T5, T6, TResult}"/>
+        /// </summary>
+        /// <param name="func">Function that will be executed upon successful call</param>
+        /// <returns>New <see cref="Funf"/></returns>
+        /// <example>
+        /// var f = Funf((a1, a2, a3, a4, a5, a6) => a1 + a2 + a3 + a4 + a5 + a6);
+        /// var x = call(f, 1, 1, 1, 1, 1, 1);        // x = 6
+        /// </example>
         public static Funf funf(Func<dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic> func) => new WFunf(func);
+
+        /// <summary>
+        /// Creates a new <see cref="Funf"/> from a given
+        /// <see cref="Func{T1, T2, T3, T4, T5, T6, T7, TResult}"/>
+        /// </summary>
+        /// <param name="func">Function that will be executed upon successful call</param>
+        /// <returns>New <see cref="Funf"/></returns>
+        /// <example>
+        /// var f = Funf((a1, a2, a3, a4, a5, a6, a7) => a1 + a2 + a3 + a4 + a5 + a6 + a7);
+        /// var x = call(f, 1, 1, 1, 1, 1, 1, 1);        // x = 7
+        /// </example>
         public static Funf funf(Func<dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic> func) => new WFunf(func);
+
+        /// <summary>
+        /// Creates a new <see cref="Funf"/> from a given
+        /// <see cref="Func{T1, T2, T3, T4, T5, T6, T7, T8, TResult}"/>
+        /// </summary>
+        /// <param name="func">Function that will be executed upon successful call</param>
+        /// <returns>New <see cref="Funf"/></returns>
+        /// <example>
+        /// var f = Funf((a1, a2, a3, a4, a5, a6, a7, a8) => a1 + a2 + a3 + a4 + a5 + a6 + a7 + a8);
+        /// var x = call(f, 1, 1, 1, 1, 1, 1, 1, 1);        // x = 8
+        /// </example>
         public static Funf funf(Func<dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic> func) => new WFunf(func);
+
+        /// <summary>
+        /// Creates a new <see cref="Funf"/> from a given
+        /// <see cref="Func{T1, T2, T3, T4, T5, T6, T7, T8, T9, TResult}"/>
+        /// </summary>
+        /// <param name="func">Function that will be executed upon successful call</param>
+        /// <returns>New <see cref="Funf"/></returns>
+        /// <example>
+        /// var f = Funf((a1, a2, a3, a4, a5, a6, a7, a8, a9) => a1 + a2 + a3 + a4 + a5 + a6 + a7 + a8 + a9);
+        /// var x = call(f, 1, 1, 1, 1, 1, 1, 1, 1, 1);        // x = 9
+        /// </example>
         public static Funf funf(Func<dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic> func) => new WFunf(func);
+
+        /// <summary>
+        /// Creates a new <see cref="Funf"/> from a given
+        /// <see cref="Func{T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, TResult}"/>
+        /// </summary>
+        /// <param name="func">Function that will be executed upon successful call</param>
+        /// <returns>New <see cref="Funf"/></returns>
+        /// <example>
+        /// var f = Funf((a1, a2, a3, a4, a5, a6, a7, a8, a9, a10) => a1 + a2 + a3 + a4 + a5 + a6 + a7 + a8 + a9 + a10);
+        /// var x = call(f, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1);        // x = 10
+        /// </example>
         public static Funf funf(Func<dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic> func) => new WFunf(func);
+
+        /// <summary>
+        /// Creates a new <see cref="Funf"/> from a given
+        /// <see cref="Func{T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, TResult}"/>
+        /// </summary>
+        /// <param name="func">Function that will be executed upon successful call</param>
+        /// <returns>New <see cref="Funf"/></returns>
+        /// <example>
+        /// var f = Funf((a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11) => a1 + a2 + a3 + a4 + a5 + a6 + a7 + a8 + a9 + a10 + a11);
+        /// var x = call(f, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1);        // x = 11
+        /// </example>
         public static Funf funf(Func<dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic> func) => new WFunf(func);
+
+        /// <summary>
+        /// Creates a new <see cref="Funf"/> from a given
+        /// <see cref="Func{T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, TResult}"/>
+        /// </summary>
+        /// <param name="func">Function that will be executed upon successful call</param>
+        /// <returns>New <see cref="Funf"/></returns>
+        /// <example>
+        /// var f = Funf((a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12) => a1 + a2 + a3 + a4 + a5 + a6 + a7 + a8 + a9 + a10 + a11 + a12);
+        /// var x = call(f, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1);        // x = 12
+        /// </example>
         public static Funf funf(Func<dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic> func) => new WFunf(func);
+
+        /// <summary>
+        /// Creates a new <see cref="Funf"/> from a given
+        /// <see cref="Func{T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, TResult}"/>
+        /// </summary>
+        /// <param name="func">Function that will be executed upon successful call</param>
+        /// <returns>New <see cref="Funf"/></returns>
+        /// <example>
+        /// var f = Funf((a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13) => a1 + a2 + a3 + a4 + a5 + a6 + a7 + a8 + a9 + a10 + a11 + a12 + a13);
+        /// var x = call(f, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1);        // x = 13
+        /// </example>
         public static Funf funf(Func<dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic> func) => new WFunf(func);
+
+        /// <summary>
+        /// Creates a new <see cref="Funf"/> from a given
+        /// <see cref="Func{T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, TResult}"/>
+        /// </summary>
+        /// <param name="func">Function that will be executed upon successful call</param>
+        /// <returns>New <see cref="Funf"/></returns>
+        /// <example>
+        /// var f = Funf((a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14) => a1 + a2 + a3 + a4 + a5 + a6 + a7 + a8 + a9 + a10 + a11 + a12 + a13 + a14);
+        /// var x = call(f, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1);        // x = 14
+        /// </example>
         public static Funf funf(Func<dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic> func) => new WFunf(func);
+
+        /// <summary>
+        /// Creates a new <see cref="Funf"/> from a given
+        /// <see cref="Func{T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, TResult}"/>
+        /// </summary>
+        /// <param name="func">Function that will be executed upon successful call</param>
+        /// <returns>New <see cref="Funf"/></returns>
+        /// <example>
+        /// var f = Funf((a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15) => a1 + a2 + a3 + a4 + a5 + a6 + a7 + a8 + a9 + a10 + a11 + a12 + a13 + a14 + a15);
+        /// var x = call(f, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1);        // x = 15
+        /// </example>
         public static Funf funf(Func<dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic> func) => new WFunf(func);
+
+        /// <summary>
+        /// Creates a new <see cref="Funf"/> from a given
+        /// <see cref="Func{T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, TResult}"/>
+        /// </summary>
+        /// <param name="func">Function that will be executed upon successful call</param>
+        /// <returns>New <see cref="Funf"/></returns>
+        /// <example>
+        /// var f = Funf((a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16) => a1 + a2 + a3 + a4 + a5 + a6 + a7 + a8 + a9 + a10 + a11 + a12 + a13 + a14 + a15 + a16);
+        /// var x = call(f, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1);        // x = 16
+        /// </example>
         public static Funf funf(Func<dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic> func) => new WFunf(func);
 
         #endregion
 
         /// <summary>
-        /// Simple wrapped Func<>
+        /// Simple wrapped dotnet function
         /// </summary>
         private readonly struct WFunf : Funf
         {
             #region Constructors
 
-            internal WFunf(Func<dynamic> func)
+            public WFunf(Func<dynamic> func)
             {
                 this.Func = func;
                 this.arity = 0;
             }
 
-            internal WFunf(Func<dynamic, dynamic> func)
+            public WFunf(Func<dynamic, dynamic> func)
             {
                 this.Func = func ?? (x => x);
                 this.arity = 1;
             }
 
-            internal WFunf(Func<dynamic, dynamic, dynamic> func)
+            public WFunf(Func<dynamic, dynamic, dynamic> func)
             {
                 this.Func = func ?? ((x1, x2) => (x1, x2));
                 this.arity = 2;
             }
 
-            internal WFunf(Func<dynamic, dynamic, dynamic, dynamic> func)
+            public WFunf(Func<dynamic, dynamic, dynamic, dynamic> func)
             {
                 this.Func = func ?? ((x1, x2, x3) => (x1, x2, x3));
                 this.arity = 3;
             }
 
-            internal WFunf(Func<dynamic, dynamic, dynamic, dynamic, dynamic> func)
+            public WFunf(Func<dynamic, dynamic, dynamic, dynamic, dynamic> func)
             {
                 this.Func = func ?? ((x1, x2, x3, x4) => (x1, x2, x3, x4));
                 this.arity = 4;
             }
 
-            internal WFunf(Func<dynamic, dynamic, dynamic, dynamic, dynamic, dynamic> func)
+            public WFunf(Func<dynamic, dynamic, dynamic, dynamic, dynamic, dynamic> func)
             {
                 this.Func = func ?? ((x1, x2, x3, x4, x5) => (x1, x2, x3, x4, x5));
                 this.arity = 5;
             }
 
-            internal WFunf(Func<dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic> func)
+            public WFunf(Func<dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic> func)
             {
                 this.Func = func ?? ((x1, x2, x3, x4, x5, x6) => (x1, x2, x3, x4, x5, x6));
                 this.arity = 6;
             }
 
-            internal WFunf(Func<dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic> func)
+            public WFunf(Func<dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic> func)
             {
                 this.Func = func ?? ((x1, x2, x3, x4, x5, x6, x7) => (x1, x2, x3, x4, x5, x6, x7));
                 this.arity = 7;
             }
 
-            internal WFunf(Func<dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic> func)
+            public WFunf(Func<dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic> func)
             {
                 this.Func = func ?? ((x1, x2, x3, x4, x5, x6, x7, x8) => (x1, x2, x3, x4, x5, x6, x7, x8));
                 this.arity = 8;
             }
 
-            internal WFunf(Func<dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic> func)
+            public WFunf(Func<dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic> func)
             {
                 this.Func = func ?? ((x1, x2, x3, x4, x5, x6, x7, x8, x9) => (x1, x2, x3, x4, x5, x6, x7, x8, x9));
                 this.arity = 9;
             }
 
-            internal WFunf(Func<dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic> func)
+            public WFunf(Func<dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic> func)
             {
                 this.Func = func ?? ((x1, x2, x3, x4, x5, x6, x7, x8, x9, x10) => (x1, x2, x3, x4, x5, x6, x7, x8, x9, x10));
                 this.arity = 10;
             }
 
-            internal WFunf(Func<dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic> func)
+            public WFunf(Func<dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic> func)
             {
                 this.Func = func ?? ((x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11) => (x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11));
                 this.arity = 11;
             }
 
-            internal WFunf(Func<dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic> func)
+            public WFunf(Func<dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic> func)
             {
                 this.Func = func ?? ((x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12) => (x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12));
                 this.arity = 12;
             }
 
-            internal WFunf(Func<dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic> func)
+            public WFunf(Func<dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic> func)
             {
                 this.Func = func ?? ((x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13) => (x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13));
                 this.arity = 13;
             }
 
-            internal WFunf(Func<dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic> func)
+            public WFunf(Func<dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic> func)
             {
                 this.Func = func ?? ((x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14) => (x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14));
                 this.arity = 14;
             }
 
-            internal WFunf(Func<dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic> func)
+            public WFunf(Func<dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic> func)
             {
                 this.Func = func ?? ((x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15) => (x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15));
                 this.arity = 15;
             }
 
-            internal WFunf(Func<dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic> func)
+            public WFunf(Func<dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic> func)
             {
                 this.Func = func ?? ((x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15, x16) => (x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15, x16));
                 this.arity = 16;
             }
-
-            internal WFunf(params dynamic[] args) : this(() => args) { }
 
             #endregion
 
             private dynamic Func { get; }
 
             public int arity { get; }
-            public IEnumerable<dynamic> args => nilf;
-
-            dynamic Funf.call() => invoke_func();
+            private IEnumerable<dynamic> args => new dynamic[0];
 
             public dynamic invoke_func(IEnumerable<dynamic> args) => invoke_func(args.ToArray());
             public dynamic invoke_func(params dynamic[] args) => args.Length switch
@@ -212,21 +399,20 @@ namespace Funship
         }
 
         /// <summary>
-        /// Partially called function that has some args set and expects the rest
+        /// A function that encloses some captured args
         /// </summary>
-        private readonly struct PFunf : Funf
+        private readonly struct CapFunf : Funf
         {
-            public PFunf(Funf fun, IEnumerable<dynamic> args, int arity)
+            public CapFunf(Funf f, IEnumerable<dynamic> args, int arity)
             {
-                this.f = fun;
+                this.f = f;
                 this.args = args;
                 this.arity = arity;
             }
 
             private Funf f { get; }
-            public IEnumerable<dynamic> args { get; }
+            private IEnumerable<dynamic> args { get; }
             public int arity { get; }
-            dynamic Funf.call() => this.collect_args_and_call();
 
             public dynamic collect_args_and_call(params dynamic[] moreArgs) => this.collect_args_and_call(moreArgs.AsEnumerable());
             public dynamic collect_args_and_call(IEnumerable<dynamic> moreArgs) => call(f, this.args.Concat(moreArgs));
@@ -235,9 +421,9 @@ namespace Funship
         /// <summary>
         /// Composed function that, when executed, will pass its outcome to another function
         /// </summary>
-        private readonly struct CFunf : Funf
+        private readonly struct CompFunf : Funf
         {
-            public CFunf(Funf f, Funf g, int arity, IEnumerable<dynamic> args)
+            public CompFunf(Funf f, Funf g, int arity, IEnumerable<dynamic> args)
             {
                 this.f = f;
                 this.g = g;
@@ -247,9 +433,8 @@ namespace Funship
 
             private Funf f { get; }
             private Funf g { get; }
-            public IEnumerable<dynamic> args { get; }
+            private IEnumerable<dynamic> args { get; }
             public int arity { get; }
-            dynamic Funf.call() => this.collect_args_and_call();
 
 
             public dynamic collect_args_and_call(params dynamic[] moreArgs) => this.collect_args_and_call(moreArgs.AsEnumerable());
@@ -258,7 +443,7 @@ namespace Funship
                 var allArgs = this.args.Concat(moreArgs).ToArray();
                 return allArgs.Length switch
                 {
-                    var l when l < f.arity => new CFunf(f, g, f.arity + g.arity - l, allArgs),
+                    var l when l < f.arity => new CompFunf(f, g, f.arity + g.arity - l, allArgs),
                     _ => call(g, call(f, allArgs))
                 };
             }

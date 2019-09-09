@@ -15,7 +15,6 @@
 /***************************************************************************/
 
 using System;
-using System.Collections.Generic;
 using Xunit;
 
 using static Funship.Fist;
@@ -144,16 +143,16 @@ namespace Funship.Tests
         }
 
         [Fact]
-        public void can_compose_inferred()
+        public void can_call_compose_inferred()
         {
             var f = funf(x => x - 2);
             var g = funf(y => y * 2);
-
             var h = compose(f, g);
-            var i = compose(h, f);
+            var i = capture(g, f, 10);
 
             Assert.Equal(16, call(g, f, 10));
             Assert.Equal(14, call(f, g, f, 10));
+            Assert.Equal(16, call(i));
         }
     }
 }
