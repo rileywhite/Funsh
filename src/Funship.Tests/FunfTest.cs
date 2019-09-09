@@ -17,7 +17,6 @@
 using System;
 using Xunit;
 
-using static Funship.Fist;
 using static Funship.Funf;
 
 namespace Funship.Tests

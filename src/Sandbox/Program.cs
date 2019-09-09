@@ -26,21 +26,18 @@ namespace Sandbox
     {
         static void Main(string[] _)
         {
-            var list = fist(1, 2, 3, 4);                      // New functional list [1, 2, 3, 4]
+            var list = fist(1, 2, 3, 4);                            // New functional list [1, 2, 3, 4]
 
-            var result = reduce(list, (x, acc) => x * acc);   // Functional reduce call to multiply list items
+            var result = reduce(list, funf((x, acc) => x * acc));   // Functional reduce call to multiply list items
             Console.WriteLine(result);                        // Prints 24
 
-            var mappedList = map(list, x => 2 * x);           // Map to a new list with each element doubled
+            var mappedList = map(list, funf(x => 2 * x));           // Map to a new list with each element doubled
             println(mappedList);                              // Prints 2, 4, 6, 8
 
-#if DEBUG
-            var bigList = to_fist(Enumerable.Range(0, 1000)); // List with 10 thousand items. Will be lazy-created. (Tail.Fody doesn't currently catch this call in Debug compiles.)
-#else
-            var bigList = to_fist(Enumerable.Range(0, 10000000)); // List with 10 million items. Will be lazy-created.
-#endif
-            var max = reduce(bigList, (x, acc) => x > acc ? x : acc);
-            Console.WriteLine(max);                            // Prints 999 in debug mode and 9999999 in release
+            var bigList = fist(Enumerable.Range(0, 1000)); // List with 10 thousand items. Will be lazy-created. (Tail.Fody doesn't currently catch this call in Debug compiles.)
+
+            var max = reduce(bigList, funf((x, acc) => x > acc ? x : acc));
+            Console.WriteLine(max);                            // Prints 999
 
             var fun = funf(x => x + 1);
             Console.WriteLine(call(fun, 10));

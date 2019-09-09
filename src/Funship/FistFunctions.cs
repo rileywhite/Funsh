@@ -27,38 +27,45 @@ namespace Funship
         /// Map a <see cref="Fist"/> using a given <see cref="Funf"/>
         /// </summary>
         /// <param name="list"><see cref="Fist"/> to map</param>
-        /// <param name="fun"><see cref="Funf"/> to map <paramref name="list"/> to</param>
+        /// <param name="fun">
+        /// <see cref="Funf"/> to map <paramref name="list"/> to. Should be f(x) -> y where
+        /// x is a list element and y is a mapped list element.
+        /// </param>
         /// <returns>Mapped version of <paramref name="list"/>.</returns>
         /// <remarks>
         /// Mapping is done in a lazy manner. <paramref name="fun"/> is called on an
         /// element of <paramref name="list"/> as it is traversed.
         /// </remarks>
         /// <example>
-        /// var mapped = map(fist(1, 2, 3, 4), x => 2 * x); // mapped = fist(2, 4, 6, 8)
+        /// var mapped = map(fist(1, 2, 3, 4), funf(x => 2 * x)); // mapped = fist(2, 4, 6, 8)
         /// </example>
-        public static Fist map(Fist list, Func<dynamic, dynamic> fun) => new MFist(list, fun);
+        public static Fist map(Fist list, Funf fun) => new MFist(list, fun);
 
         /// <summary>
         /// Reduces a <see cref="Fist"/> using a <see cref="Funf"/> that accepts an element
         /// and an accumulator.
         /// </summary>
         /// <param name="list"><see cref="Fist"/> to reduce</param>
-        /// <param name="fun">A <see cref="Funf"/> that should accept an element and an accumulator and return an updated value</param>
+        /// <param name="fun">
+        /// A <see cref="Funf"/> that should accept an element and an accumulator and return an updated value.
+        /// Should be in the form f(x, acc) -> new_acc, where x and acc are an element and the accumulator, and
+        /// new_acc is the accumulator value having taken x into account.
+        /// </param>
         /// <returns>Reduced value</returns>
         /// <remarks>
         /// Reducing a <see cref="Fist"/> causes it to be traversed, meaning that any delayed lazy traversal
         /// costs will be incurred at the time of this call.
         ///
-        /// The initial call to <paramref name="fun"/> will send the <see cref="Fist.Head"/> of <paramref name="list"/>
-        /// as the first accumulator value. The actual traversal runs over <see cref="Fist.Tail"/> of <paramref name="list"/>.
+        /// The initial call to <paramref name="fun"/> will send the <see cref="Fist.head"/> of <paramref name="list"/>
+        /// as the first accumulator value. The actual traversal runs over <see cref="Fist.tail"/> of <paramref name="list"/>.
         ///
-        /// Any attempt to reduce <see cref="nilf"/> in this overload of <see cref="reduce(Fist, Func{dynamic, dynamic, dynamic})"/>
+        /// Any attempt to reduce <see cref="nilf"/> in this overload of <see cref="reduce(Fist, Funf)"/>
         /// will result in <see cref="nilf"/>.
         /// </remarks>
         /// <example>
-        /// var val = reduce(fist(1, 2, 3, 4), (el, acc) => el + acc; // val = 10
+        /// var val = reduce(fist(1, 2, 3, 4), funf((el, acc) => el + acc)); // val = 10
         /// </example>
-        public static dynamic reduce(Fist list, Func<dynamic, dynamic, dynamic> fun) => list switch
+        public static dynamic reduce(Fist list, Funf fun) => list switch
         {
             Nilf _ => nilf,
             (var head, Fist tail) => reduce(tail, head, fun),
@@ -70,22 +77,26 @@ namespace Funship
         /// </summary>
         /// <param name="list"><see cref="Fist"/> to reduce</param>
         /// <param name="acc">Initial accumulator value</param>
-        /// <param name="fun">A <see cref="Funf"/> that should accept an element and an accumulator and return an updated value</param>
+        /// <param name="fun">
+        /// A <see cref="Funf"/> that should accept an element and an accumulator and return an updated value.
+        /// Should be in the form f(x, acc) -> new_acc, where x and acc are an element and the accumulator, and
+        /// new_acc is the accumulator value having taken x into account.
+        /// </param>
         /// <returns>Reduced value</returns>
         /// <remarks>
         /// Reducing a <see cref="Fist"/> causes it to be traversed, meaning that any delayed lazy traversal
         /// costs will be incurred at the time of this call.
         ///
-        /// Any attempt to reduce <see cref="nilf"/> in this overload of <see cref="reduce(Fist, dynamic, Func{dynamic, dynamic, dynamic})"/>
+        /// Any attempt to reduce <see cref="nilf"/> in this overload of <see cref="reduce(Fist, dynamic, Funf)"/>
         /// will result in returning <paramref name="acc"/>.
         /// </remarks>
         /// <example>
-        /// var val = reduce(fist(1, 2, 3, 4), true, (el, acc) => acc &amp;&amp; (el &lt; 5); // val = true
+        /// var val = reduce(fist(1, 2, 3, 4), true, funf((el, acc) => acc &amp;&amp; (el &lt; 5))); // val = true
         /// </example>
-        public static dynamic reduce(Fist list, dynamic acc, Func<dynamic, dynamic, dynamic> fun) => list switch
+        public static dynamic reduce(Fist list, dynamic acc, Funf fun) => list switch
         {
             Nilf _ => acc,
-            (var head, Fist tail) => reduce(tail, fun(head, acc), fun),
+            (var head, Fist tail) => reduce(tail, call(fun, head, acc), fun),
         };
 
         /// <summary>
@@ -222,7 +233,7 @@ namespace Funship
         /// <c>false</c> predicate return value is encounted.
         /// </remarks>
         /// <example>
-        /// var val = all(fist(1, 2, 3, 4), x => x &lt; 5)     // val = true
+        /// var val = all(fist(1, 2, 3, 4), funf(x => x &lt; 5))     // val = true
         /// </example>
         public static bool all(Fist list, Funf fun) => list switch
         {
@@ -244,7 +255,7 @@ namespace Funship
         /// <c>true</c> predicate return value is encounted.
         /// </remarks>
         /// <example>
-        /// var val = any(fist(1, 2, 3, 4), x => x &gt; 5)     // val = false
+        /// var val = any(fist(1, 2, 3, 4), funf(x => x &gt; 5))     // val = false
         /// </example>
         public static bool any(Fist list, Funf fun) => list switch
         {

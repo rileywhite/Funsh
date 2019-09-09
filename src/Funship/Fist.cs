@@ -19,20 +19,22 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 
+using static Funship.Funf;
+
 namespace Funship
 {
     /// <summary>
-    /// Represents a functional list that is constructed with a <see cref="Head"/>,
-    /// which is the first element in the functional list, and a <see cref="Tail"/>
+    /// Represents a functional list that is constructed with a <see cref="head"/>,
+    /// which is the first element in the functional list, and a <see cref="tail"/>
     /// which reprents the remainder of the functional list without the tail.
     /// </summary>
     /// <remarks>
-    /// Create a fist using <see cref="fist(dynamic[])"/> or <see cref="to_fist{T}(IEnumerable{T})"/>.
+    /// Create a fist using <see cref="fist(dynamic[])"/> or <see cref="fist{T}(IEnumerable{T})"/>.
     /// 
     /// A <see cref="Fist"/> can be matched as a <see cref="ValueTuple{dynamic, Fist}"/>
     /// in a <c>switch</c> statement.
     ///
-    /// An empty list, which as a <see cref="Tail"/> value also indicates the end of a non-empty list,
+    /// An empty list, which as a <see cref="tail"/> value also indicates the end of a non-empty list,
     /// is represented by <see cref="nilf"/>, which can be matched by type <see cref="Nilf"/>.
     ///
     /// All <see cref="Fist"/> implementations must be immutable and should be internal or private
@@ -58,25 +60,25 @@ namespace Funship
         /// <summary>
         /// Provides a <see cref="ValueTuple{dynamic, Fist}"/> deconstruction of the <see cref="Fist"/>
         /// </summary>
-        /// <param name="head">First item of the deconstruction is the <see cref="Head"/></param>
-        /// <param name="tail">Second item of the deconstruction is the <see cref="Tail"/></param>
+        /// <param name="head">First item of the deconstruction is the <see cref="head"/></param>
+        /// <param name="tail">Second item of the deconstruction is the <see cref="tail"/></param>
         public void Deconstruct(out dynamic head, out Fist tail);
 
         /// <summary>
         /// Gets the first element in the <see cref="Fist"/>
         /// </summary>
-        public dynamic Head { get; }
+        public dynamic head { get; }
 
         /// <summary>
-        /// Gets the part of the list remaining in the <see cref="Fist"/> after the <see cref="Head"/>
+        /// Gets the part of the list remaining in the <see cref="Fist"/> after the <see cref="head"/>
         /// </summary>
-        public Fist Tail { get; }
+        public Fist tail { get; }
 
         /// <summary>
         /// Gets whether the <see cref="Fist"/> is an empty/nil list. Only the <see cref="Nilf"/> type's
         /// <see cref="nilf"/> instance will return <c>true</c>.
         /// </summary>
-        public bool IsNil { get; }
+        public bool is_nil { get; }
 
         /// <summary>
         /// Singleton <see cref="Nilf"/> that is used to represent an empty <see cref="Fist"/>.
@@ -88,11 +90,32 @@ namespace Funship
         /// </summary>
         /// <param name="head"></param>
         /// <param name="tail"></param>
-        /// <returns></returns>
+        /// <returns>New fist with the given <paramref name="head"/> and <paramref name="tail"/></returns>
         public static Fist fist(dynamic head, Fist tail) => head switch
         {
             Nilf _ => nilf,
             _ => new SFist(head, tail),
+        };
+
+        /// <summary>
+        /// Converts a given <see cref="IEnumerable{T}"/> to a <see cref="Fist"/>.
+        /// </summary>
+        /// <typeparam name="T">Type contained in the <see cref="IEnumerable{T}"/></typeparam>
+        /// <param name="vals">Collection of items that the new <see cref="Fist"/> should contain in order</param>
+        /// <returns><see cref="Fist"/> containing the items in <paramref name="vals"/></returns>
+        /// <remarks>
+        /// The <see cref="Fist"/> creation is done in a lazy manner. Each item in <paramref name="vals"/>
+        /// is enumerated over only as the <see cref="Fist"/> is traversed.
+        /// </remarks>
+        /// <example>
+        /// var list = fist(new [] { 1, 2, 3, 4 });    // list = Fist with head 1 and tail of fist(2, 3, 4)
+        /// var empty_list = fist(new object[0]);      // empty_list = <see cref="nilf"/>
+        /// </example>
+        public static Fist fist<T>(IEnumerable<T> vals) => vals switch
+        {
+            null => nilf,
+            _ when !vals.Any() => nilf,
+            _ => new DFist<T>(vals.First(), vals.Skip(1)),
         };
 
         /// <summary>
@@ -112,28 +135,7 @@ namespace Funship
         public static Fist fist(params dynamic[] vals) => vals switch
         {
             _ when vals.Length == 1 && vals[0] == null => nilf,
-            _ => to_fist(vals.AsEnumerable()),
-        };
-
-        /// <summary>
-        /// Converts a given <see cref="IEnumerable{T}"/> to a <see cref="Fist"/>.
-        /// </summary>
-        /// <typeparam name="T">Type contained in the <see cref="IEnumerable{T}"/></typeparam>
-        /// <param name="vals">Collection of items that the new <see cref="Fist"/> should contain in order</param>
-        /// <returns><see cref="Fist"/> containing the items in <paramref name="vals"/></returns>
-        /// <remarks>
-        /// The <see cref="Fist"/> creation is done in a lazy manner. Each item in <paramref name="vals"/>
-        /// is enumerated over only as the <see cref="Fist"/> is traversed.
-        /// </remarks>
-        /// <example>
-        /// var list = to_fist(new [] { 1, 2, 3, 4 });    // list = Fist with head 1 and tail of fist(2, 3, 4)
-        /// var empty_list = to_fist(new object[0]);      // empty_list = <see cref="nilf"/>
-        /// </example>
-        public static Fist to_fist<T>(IEnumerable<T> vals) => vals switch
-        {
-            null => nilf,
-            _ when !vals.Any() => nilf,
-            _ => new DFist<T>(vals.First(), vals.Skip(1)),
+            _ => fist(vals.AsEnumerable()),
         };
 
         /// <summary>
@@ -145,7 +147,7 @@ namespace Funship
         /// <remarks>
         /// Testing equality of two <see cref="Fist"/> instances causes them to be traversed in parallel,
         /// meaning that any delayed lazy traversal costs will be incurred at the time of this call. However,
-        /// traversal stops at the first pair of <see cref="Head"/> elements that are not equal.
+        /// traversal stops at the first pair of <see cref="head"/> elements that are not equal.
         ///
         /// Two fists are considered equal if their items, traversed in parallel, are each equal as
         /// determined by a call to <see cref="object.Equals(object, object)"/>.
@@ -168,7 +170,7 @@ namespace Funship
         /// Calculating a hash code for a <see cref="Fist"/> causes it to be traversed, meaning that any
         /// delayed lazy traversal costs will be incurred at the time of this call.
         /// </remarks>
-        public static int hash_code(Fist list) => reduce(list, 0, (x, acc) => 486187739 * acc + (x.GetHashCode()));
+        public static int hash_code(Fist list) => reduce(list, 0, funf((x, acc) => 486187739 * acc + (x.GetHashCode())));
 
         private static IEnumerator<object> enumerator(Fist list) => new FistEnumerator(list);
 
@@ -178,7 +180,7 @@ namespace Funship
             {
                 // the nullable logic is here because MoveNext is called before the first value is read
                 this.InitialList = list;
-                this.List = default(Fist?);
+                this.List = default;
             }
 
             private Fist InitialList { get; set; }
@@ -186,7 +188,7 @@ namespace Funship
             private Fist? List { get; set; }
 #nullable disable
 
-            public object Current => this.List.Head;
+            public object Current => this.List.head;
 
             public void Dispose()
             {
@@ -194,7 +196,7 @@ namespace Funship
                 this.List = null;
             }
 
-            public bool MoveNext() => !(this.List = this.List == null ? this.InitialList : this.List.Tail).IsNil;
+            public bool MoveNext() => !(this.List = this.List == null ? this.InitialList : this.List.tail).is_nil;
 
             public void Reset() => this.List = null;
         }
@@ -202,7 +204,7 @@ namespace Funship
         #region Fist types
 
         /// <summary>
-        /// Nil list. Use <see cref="nilf"/> to get an instance.
+        /// Nil list. Use <see cref="nilf"/> as a shortcut to get an instance.
         /// </summary>
         public readonly struct Nilf : Fist
         {
@@ -220,17 +222,17 @@ namespace Funship
             /// <summary>
             /// Gets <see cref="nilf"/>
             /// </summary>
-            public dynamic Head => nilf;
+            public dynamic head => nilf;
 
             /// <summary>
             /// Gets <see cref="nilf"/>
             /// </summary>
-            public Fist Tail => nilf;
+            public Fist tail => nilf;
 
             /// <summary>
             /// Always <c>true</c>
             /// </summary>
-            public bool IsNil => true;
+            public bool is_nil => true;
 
 #nullable enable
             /// <summary>
@@ -259,26 +261,26 @@ namespace Funship
             internal SFist(dynamic head)
             {
                 if (nilf.Equals(head)) { throw new ArgumentException("DFist head cannot be nilf"); }
-                this.Head = head;
-                this.Tail = nilf;
+                this.head = head;
+                this.tail = nilf;
             }
 
             internal SFist(dynamic head, Fist tail)
             {
                 if (nilf.Equals(head)) { throw new ArgumentException("DFist head cannot be nilf"); }
-                this.Head = head;
-                this.Tail = tail;
+                this.head = head;
+                this.tail = tail;
             }
 
             public void Deconstruct(out dynamic head, out Fist tail)
             {
-                head = this.Head;
-                tail = this.Tail;
+                head = this.head;
+                tail = this.tail;
             }
 
-            public dynamic Head { get; }
-            public Fist Tail { get; }
-            public bool IsNil => false;
+            public dynamic head { get; }
+            public Fist tail { get; }
+            public bool is_nil => false;
 
 #nullable enable
             public override bool Equals(object? obj) => obj != null && obj is Fist && equals(this, (Fist)obj);
@@ -298,22 +300,22 @@ namespace Funship
             internal DFist(dynamic head, IEnumerable<T> tail)
             {
                 if (nilf.Equals(head)) { throw new ArgumentException("DFist head cannot be nilf"); }
-                this.Head = head;
+                this.head = head;
                 this.Tail = new Lazy<Fist>(() => tail.Any() ? new DFist<T>(tail.First(), tail.Skip(1)) : nilf);
             }
 
             public void Deconstruct(out dynamic head, out Fist tail)
             {
-                head = this.Head;
+                head = this.head;
                 tail = this.Tail.Value;
             }
 
-            public dynamic Head { get; }
+            public dynamic head { get; }
 
             private Lazy<Fist> Tail { get; }
-            Fist Fist.Tail => this.Tail.Value;
+            Fist Fist.tail => this.Tail.Value;
 
-            public bool IsNil => false;
+            public bool is_nil => false;
 
 
 #nullable enable
@@ -331,14 +333,14 @@ namespace Funship
         /// </summary>
         private readonly struct MFist : Fist
         {
-            internal MFist(Fist src, Func<dynamic, dynamic> fun)
+            internal MFist(Fist src, Funf fun)
             {
                 switch (src)
                 {
                     case (var head, Nilf _):
                         this.Head = new Lazy<dynamic>(() =>
                         {
-                            var h = fun(head);
+                            var h = call(fun, head);
                             return h;
                         });
                         this.Tail = new Lazy<Fist>(() => nilf);
@@ -347,10 +349,10 @@ namespace Funship
                     case var _:
                         this.Head = new Lazy<dynamic>(() =>
                         {
-                            var h = fun(src.Head);
+                            var h = call(fun, src.head);
                             return h;
                         });
-                        this.Tail = new Lazy<Fist>(() => new MFist(src.Tail, fun));
+                        this.Tail = new Lazy<Fist>(() => new MFist(src.tail, fun));
                         break;
                 }
             }
@@ -362,12 +364,12 @@ namespace Funship
             }
 
             private Lazy<dynamic> Head { get; }
-            dynamic Fist.Head => this.Head.Value;
+            dynamic Fist.head => this.Head.Value;
 
             private Lazy<Fist> Tail { get; }
-            Fist Fist.Tail => this.Tail.Value;
+            Fist Fist.tail => this.Tail.Value;
 
-            public bool IsNil => false;
+            public bool is_nil => false;
 
 
 #nullable enable

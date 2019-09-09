@@ -5,13 +5,29 @@
     <LangVersion>8.0</LangVersion>
     <Nullable>enable</Nullable>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <Description>
+    A library that adds functional style lists and functions to C#.
+    
+    Create a functional list using var list = fist(1, 2, 3, 4), and then use
+    the library of standard map(), reduce(), etc functions to work with it.
+    It also deconstructs to a ValueTuple such that C# 8 switch statements
+    ca pattern match using (var head, Fist tail).
+    
+    Create a functional function using var f = funf((x, y) => x + y) and then call it using
+    call(f, 1, 2), which would be 3 in this case. You can also compose multiple functions
+    in a call like call(f, 1, f, 2, 3), which would first call the rightmost f with 2 and 3
+    to get 5 and then would send 1 and the resulting 5 to the first f to get 6.
+
+    Full XML Documentation provides interactive help if your IDE of choice supports it. Also
+    see full documentation on the project page.
+    </Description>
     <Authors>Riley White</Authors>
     <Product>Funship</Product>
     <Copyright>Copyright 2019 Riley White</Copyright>
     <PackageProjectUrl>https://github.com/rileywhite/Funship</PackageProjectUrl>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
     <PackageTags>funship functional-programming fp functional-list head-tail-list curry partially-call-function</PackageTags>
-    <Version>1.0.0.0-dev</Version>
+    <Version>1.0.0.0-alpha-1</Version>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DocumentationFile>bin\Debug\netcoreapp3.0\Funship.xml</DocumentationFile>

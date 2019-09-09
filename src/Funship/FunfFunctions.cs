@@ -78,7 +78,7 @@ namespace Funship
         /// var y = call(i);            // y = -13
         /// var z = call(h, 18, 24, 30) // z = <see cref="IEnumerable{dynamic}"/> of [-13, 24, 30]
         /// </example>
-        public static Funf capture(Funf f, params dynamic[] args) => capture(f, to_fist(args));
+        public static Funf capture(Funf f, params dynamic[] args) => capture(f, fist((IEnumerable<dynamic>)args));
         private static Funf capture(Funf f, IEnumerable<dynamic> args) => capture_and_compose(f, args) switch
         {
             (var fun, var empty) when !empty.Any() => fun,

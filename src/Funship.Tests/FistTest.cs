@@ -31,8 +31,8 @@ namespace Funship.Tests
         public void can_test_equality_and_hashcode()
         {
             var list = fist(2, 4, 6, 8);
-            var dynamicList = to_fist(Enumerable.Range(1, 4));
-            var mappedList = map(fist(1, 2, 3, 4), x => 2 * x);
+            var dynamicList = fist(Enumerable.Range(1, 4));
+            var mappedList = map(fist(1, 2, 3, 4), funf(x => 2 * x));
 
             Assert.Equal(fist(2, 4, 6, 8), list);
             Assert.Equal(fist(2, 4, 6, 8).GetHashCode(), list.GetHashCode());
@@ -64,15 +64,15 @@ namespace Funship.Tests
         public void nilf_is_a_singleton()
         {
             Assert.Same(nilf, fist());
-            Assert.Same(nilf, to_fist(new int[] { }));
-            Assert.NotSame(nilf, to_fist(new int[] { 1 }));
+            Assert.Same(nilf, fist(new int[] { }));
+            Assert.NotSame(nilf, fist(new int[] { 1 }));
         }
 
         [Fact]
         public void can_reduce_list()
         {
             var list = fist(1, 2, 3, 4);
-            var result = reduce(list, (x, acc) => x * acc);
+            var result = reduce(list, funf((x, acc) => x * acc));
             Assert.Equal(24, result);
         }
 
@@ -80,7 +80,7 @@ namespace Funship.Tests
         public void can_map_list()
         {
             var list = fist(1, 2, 3, 4);
-            var result = map(fist(1, 2, 3, 4), x => x * 2);
+            var result = map(fist(1, 2, 3, 4), funf(x => x * 2));
             Assert.Equal(result, fist(2, 4, 6, 8));
         }
 
