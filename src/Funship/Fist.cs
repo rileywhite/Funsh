@@ -371,6 +371,52 @@ namespace Funship
 
             public bool is_nil => false;
 
+#nullable enable
+            public override bool Equals(object? obj) => obj != null && obj is Fist && equals(this, (Fist)obj);
+#nullable disable
+
+            public override int GetHashCode() => hash_code(this);
+
+            IEnumerator IEnumerable.GetEnumerator() => this.GetEnumerator();
+            public IEnumerator<object> GetEnumerator() => enumerator(this);
+        }
+
+        /// <summary>
+        /// A <see cref="Fist"/> that filters items based on
+        /// a given predicate
+        /// </summary>
+        private readonly struct FFist : Fist
+        {
+            /// <summary>
+            /// Creates a new <see cref="FFist"/>
+            /// </summary>
+            /// <param name="source">Source <see cref="Fist"/> that has a filter applied</param>
+            /// <param name="predicate"><see cref="Funf"/> of form f(x) -> bool used to filter the list</param>
+            /// <returns>New <see cref="FFist"/> if at least one item gets a <c>true</c> result from <paramref name="predicate"/>, else <see cref="nilf"/></returns>
+            public static Fist create(Fist source, Funf predicate) => drop_until(source, predicate) switch
+            {
+                Nilf _ => nilf,
+                (var head, Fist tail) => new FFist(head, tail, predicate),
+            };
+
+            private FFist(dynamic head, Fist tail_source, Funf predicate)
+            {
+                this.head = head;
+                this.tail = new Lazy<Fist>(() => create(tail_source, predicate));
+            }
+
+            public dynamic head { get; }
+
+            public Lazy<Fist> tail { get; }
+            Fist Fist.tail => this.tail.Value;
+
+            public bool is_nil => false;
+
+            public void Deconstruct(out dynamic head, out Fist tail)
+            {
+                head = this.head;
+                tail = this.tail.Value;
+            }
 
 #nullable enable
             public override bool Equals(object? obj) => obj != null && obj is Fist && equals(this, (Fist)obj);

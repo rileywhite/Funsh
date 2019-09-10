@@ -34,7 +34,7 @@ namespace Funship
         /// <param name="g"><see cref="Funf"/> to which arguments will be applied second, including the result from <paramref name="f"/></param>
         /// <returns>New composed <see cref="Funf"/></returns>
         /// <remarks>
-        /// The mathematical description of composed functions is: <c>h(x) -> g(f(x))</c>.
+        /// The mathematical description of composed functions g ∘ f is: <c>h(x) -> g(f(x))</c>.
         /// If <paramref name="f"/> and <paramref name="g"/> each take one argument, then that
         /// is exactly what you will get upon calling the composed <see cref="Funf"/>.
         /// </remarks>
@@ -42,13 +42,13 @@ namespace Funship
         /// var f = funf(x => x - 2);
         /// var g = funf(y => y * 2);
         ///
-        /// var h = compose(f, g);      // h(x) -> g(f(x))
+        /// var h = compose(g, f);      // h(x) -> g(f(x))
         /// var x = call(h, 10);        // x = 16
         /// 
-        /// var i = compose(h, f);      // i(x) -> f(h(x)) -> f(g(f(x)))
+        /// var i = compose(f, h);      // i(x) -> f(h(x)) -> f(g(f(x)))
         /// var y = call(i, 10);        // y = 14
         /// </example>
-        public static Funf compose(Funf f, Funf g) => new CompFunf(f, g, g.arity + f.arity - 1, nilf);
+        public static Funf compose(Funf g, Funf f) => new CompFunf(g, f, g.arity + f.arity - 1, nilf);
 
         /// <summary>
         /// Creates a new <see cref="Funf"/> with passed args enclosed. 
@@ -135,7 +135,8 @@ namespace Funship
             args.SkipWhile(arg => !(arg is Funf)) switch
             {
                 var empty when !empty.Any() => (g, args),
-                var f_and_args => (compose(capture(f_and_args.First(), f_and_args.Skip(1)), g), args.TakeWhile(arg => !(arg is Funf))),
+                var f_and_args =>
+                    (compose(g, capture(f_and_args.First(), f_and_args.Skip(1))), args.TakeWhile(arg => !(arg is Funf))),
             };
     }
 }

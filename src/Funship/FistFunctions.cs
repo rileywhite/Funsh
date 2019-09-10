@@ -100,6 +100,68 @@ namespace Funship
         };
 
         /// <summary>
+        /// Drops items from the front of the list until the current head matches a predicate
+        /// </summary>
+        /// <param name="list"><see cref="Fist"/> to drop items from</param>
+        /// <param name="predicate"><see cref="Funf"/> to match against. Should be of the form f(x) -> bool</param>
+        /// <returns><see cref="Fist"/> with a first item matching <paramref name="predicate"/> or <see cref="nilf"/> if no items match</returns>
+        /// <example>
+        /// var list = drop_until(
+        ///             fist(1, 2, 3, 4, 5, 6, 5, 4, 3, 2, 1),
+        ///             funf(x => x > 5))
+        /// // list will be fist(6, 5, 4, 3, 2, 1)
+        /// </example>
+        public static Fist drop_until(Fist list, Funf predicate) => list switch
+        {
+            Nilf _ => nilf,
+            Fist _ when call(predicate, list.head) => list,
+            (var _, Fist tail) => drop_until(tail, predicate),
+        };
+
+        /// <summary>
+        /// Drops items from the front of the list until the current head does not match a predicate
+        /// </summary>
+        /// <param name="list"><see cref="Fist"/> to drop items from</param>
+        /// <param name="predicate"><see cref="Funf"/> to match against. Should be of the form f(x) -> bool</param>
+        /// <returns><see cref="Fist"/> with a first item not matching <paramref name="predicate"/> or <see cref="nilf"/> if all items match</returns>
+        /// <example>
+        /// var list = drop_while(
+        ///             fist(1, 2, 3, 4, 5, 6, 5, 4, 3, 2, 1),
+        ///             funf(x => x &lt;= 5));
+        /// // list will be fist(6, 5, 4, 3, 2, 1)
+        /// </example>
+        public static Fist drop_while(Fist list, Funf predicate) => list switch
+        {
+            Nilf _ => nilf,
+            Fist _ when !call(predicate, list.head) => list,
+            (var _, Fist tail) => drop_while(tail, predicate),
+        };
+
+        /// <summary>
+        /// Filters a <see cref="Fist"/> to only items matching a predicate
+        /// </summary>
+        /// <param name="list"><see cref="Fist"/> to filter</param>
+        /// <param name="predicate"><see cref="Funf"/> to match against. Should be of the form f(x) -> bool</param>
+        /// <returns>New <see cref="Fist"/> containing only items that match <paramref name="predicate"/></returns>
+        /// <example>
+        /// var list = filter(fist(1, 2, 3, 4, 5, 6, 5, 4, 3, 2, 1), funf(x => x > 5));
+        /// // list will be fist(6)
+        /// </example>
+        public static dynamic filter(Fist list, Funf predicate) => FFist.create(list, predicate);
+
+        /// <summary>
+        /// Filters a <see cref="Fist"/> to only items not matching a predicate
+        /// </summary>
+        /// <param name="list"><see cref="Fist"/> to filter</param>
+        /// <param name="predicate"><see cref="Funf"/> to match against. Should be of the form f(x) -> bool</param>
+        /// <returns>New <see cref="Fist"/> containing only items that do not match <paramref name="predicate"/></returns>
+        /// <example>
+        /// var list = filter(fist(1, 2, 3, 4, 5, 6, 5, 4, 3, 2, 1), funf(x => x &lt;= 5));
+        /// // list will be fist(6)
+        /// </example>
+        public static dynamic reject(Fist list, Funf predicate) => FFist.create(list, compose(funf(x => !x), predicate));
+
+        /// <summary>
         /// Writes a <see cref="Fist"/> to <see cref="Console.Out"/> with no newline appended
         /// </summary>
         /// <param name="list"><see cref="Fist"/> to print</param>
@@ -255,7 +317,7 @@ namespace Funship
         /// <c>true</c> predicate return value is encounted.
         /// </remarks>
         /// <example>
-        /// var val = any(fist(1, 2, 3, 4), funf(x => x &gt; 5))     // val = false
+        /// var val = any(fist(1, 2, 3, 4), funf(x => x > 5))     // val = false
         /// </example>
         public static bool any(Fist list, Funf fun) => list switch
         {

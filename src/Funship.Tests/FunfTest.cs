@@ -134,8 +134,8 @@ namespace Funship.Tests
             var f = funf(x => x - 2);
             var g = funf(y => y * 2);
 
-            var h = compose(f, g);
-            var i = compose(h, f);
+            var h = compose(g, f);
+            var i = compose(f, h);
 
             Assert.Equal(16, call(h, 10));
             Assert.Equal(14, call(i, 10));
@@ -146,12 +146,11 @@ namespace Funship.Tests
         {
             var f = funf(x => x - 2);
             var g = funf(y => y * 2);
-            var h = compose(f, g);
-            var i = capture(g, f, 10);
+            var h = capture(g, f, 10);
 
             Assert.Equal(16, call(g, f, 10));
             Assert.Equal(14, call(f, g, f, 10));
-            Assert.Equal(16, call(i));
+            Assert.Equal(16, call(h));
         }
     }
 }
