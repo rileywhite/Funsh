@@ -423,7 +423,7 @@ namespace Funship
         /// </summary>
         private readonly struct CompFunf : Funf
         {
-            public CompFunf(Funf f, Funf g, int arity, IEnumerable<dynamic> args)
+            public CompFunf(Funf g, Funf f, int arity, IEnumerable<dynamic> args)
             {
                 this.f = f;
                 this.g = g;
@@ -443,7 +443,7 @@ namespace Funship
                 var allArgs = this.args.Concat(moreArgs).ToArray();
                 return allArgs.Length switch
                 {
-                    var l when l < f.arity => new CompFunf(f, g, f.arity + g.arity - l, allArgs),
+                    var l when l < f.arity => new CompFunf(g, f, f.arity + g.arity - l, allArgs),
                     _ => call(g, call(f, allArgs))
                 };
             }

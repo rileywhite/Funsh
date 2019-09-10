@@ -159,7 +159,7 @@ namespace Funship
         /// var list = filter(fist(1, 2, 3, 4, 5, 6, 5, 4, 3, 2, 1), funf(x => x &lt;= 5));
         /// // list will be fist(6)
         /// </example>
-        public static dynamic reject(Fist list, Funf predicate) => FFist.create(list, compose(predicate, funf(x => !x)));
+        public static dynamic reject(Fist list, Funf predicate) => FFist.create(list, compose(funf(x => !x), predicate));
 
         /// <summary>
         /// Writes a <see cref="Fist"/> to <see cref="Console.Out"/> with no newline appended
