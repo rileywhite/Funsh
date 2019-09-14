@@ -11,7 +11,7 @@
     Create a functional list using var list = fist(1, 2, 3, 4), and then use
     the library of standard map(), reduce(), etc functions to work with it.
     It also deconstructs to a ValueTuple such that C# 8 switch statements
-    ca pattern match using (var head, Fist tail).
+    can pattern match using (var head, Fist tail).
     
     Create a functional function using var f = funf((x, y) => x + y) and then call it using
     call(f, 1, 2), which would be 3 in this case. You can also compose multiple functions

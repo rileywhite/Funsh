@@ -16,6 +16,7 @@
 
 using System;
 using System.IO;
+using System.Linq;
 
 using static Funship.Funf;
 
@@ -23,6 +24,41 @@ namespace Funship
 {
     public partial interface Fist
     {
+        /// <summary>
+        /// Tests equality between two <see cref="Fist"/> instances.
+        /// </summary>
+        /// <param name="left"></param>
+        /// <param name="right"></param>
+        /// <returns></returns>
+        /// <remarks>
+        /// Testing equality of two <see cref="Fist"/> instances causes them to be traversed in parallel,
+        /// meaning that any delayed lazy traversal costs will be incurred at the time of this call. However,
+        /// traversal stops at the first pair of <see cref="head"/> elements that are not equal.
+        ///
+        /// Two fists are considered equal if their items, traversed in parallel, are each equal as
+        /// determined by a call to <see cref="object.Equals(object, object)"/>.
+        ///
+        /// Equality ignores the reference types contained in lists and focuses only on the values.
+        /// </remarks>
+        public static bool equals(Fist left, Fist right) => (left, right) switch
+        {
+            (Nilf _, Nilf _) => true,
+            ((_, _), Nilf _) => false,
+            (Nilf _, (_, _)) => false,
+            _ => Enumerable.SequenceEqual(left.Cast<dynamic>(), right.Cast<dynamic>()),
+        };
+
+        /// <summary>
+        /// Generates a hash code for a <see cref="Fist"/>
+        /// </summary>
+        /// <param name="list"><see cref="Fist"/> to generate hash code for</param>
+        /// <returns>Generated hash code</returns>
+        /// <remarks>
+        /// Calculating a hash code for a <see cref="Fist"/> causes it to be traversed, meaning that any
+        /// delayed lazy traversal costs will be incurred at the time of this call.
+        /// </remarks>
+        public static int hash_code<T>(Fist<T> list) => reduce(list, 0, funf((acc, x) => 486187739 * acc + (x.GetHashCode())));
+
         /// <summary>
         /// Map a <see cref="Fist"/> using a given <see cref="Funf"/>
         /// </summary>
@@ -39,7 +75,11 @@ namespace Funship
         /// <example>
         /// var mapped = map(fist(1, 2, 3, 4), funf(x => 2 * x)); // mapped = fist(2, 4, 6, 8)
         /// </example>
-        public static Fist map(Fist list, Funf fun) => new MFist(list, fun);
+        public static Fist map<T>(Fist<T> list, Funf fun) => fun switch
+        {
+            WFunf f => fist(list.Select(x => f.Func(x))),
+            _ => fist(list.Select(x => call(fun, x))),
+        };
 
         /// <summary>
         /// Reduces a <see cref="Fist"/> using a <see cref="Funf"/> that accepts an element
@@ -48,7 +88,7 @@ namespace Funship
         /// <param name="list"><see cref="Fist"/> to reduce</param>
         /// <param name="fun">
         /// A <see cref="Funf"/> that should accept an element and an accumulator and return an updated value.
-        /// Should be in the form f(x, acc) -> new_acc, where x and acc are an element and the accumulator, and
+        /// Should be in the form f(acc, x) -> new_acc, where acc and x are the accumulator and an element, and
         /// new_acc is the accumulator value having taken x into account.
         /// </param>
         /// <returns>Reduced value</returns>
@@ -65,10 +105,10 @@ namespace Funship
         /// <example>
         /// var val = reduce(fist(1, 2, 3, 4), funf((el, acc) => el + acc)); // val = 10
         /// </example>
-        public static dynamic reduce(Fist list, Funf fun) => list switch
+        public static dynamic reduce<T>(Fist<T> list, Funf fun) => fun switch
         {
-            Nilf _ => nilf,
-            (var head, Fist tail) => reduce(tail, head, fun),
+            WFunf f => Enumerable.Aggregate(list.Cast<dynamic>(), f.Func),
+            _ => list.Cast<dynamic>().Aggregate((acc, x) => call(fun, acc, x)),
         };
 
         /// <summary>
@@ -79,7 +119,7 @@ namespace Funship
         /// <param name="acc">Initial accumulator value</param>
         /// <param name="fun">
         /// A <see cref="Funf"/> that should accept an element and an accumulator and return an updated value.
-        /// Should be in the form f(x, acc) -> new_acc, where x and acc are an element and the accumulator, and
+        /// Should be in the form f(acc, x) -> new_acc, where acc and x are the accumulator and an element, and
         /// new_acc is the accumulator value having taken x into account.
         /// </param>
         /// <returns>Reduced value</returns>
@@ -93,10 +133,10 @@ namespace Funship
         /// <example>
         /// var val = reduce(fist(1, 2, 3, 4), true, funf((el, acc) => acc &amp;&amp; (el &lt; 5))); // val = true
         /// </example>
-        public static dynamic reduce(Fist list, dynamic acc, Funf fun) => list switch
+        public static dynamic reduce<T>(Fist<T> list, dynamic acc, Funf fun) => fun switch
         {
-            Nilf _ => acc,
-            (var head, Fist tail) => reduce(tail, call(fun, head, acc), fun),
+            WFunf f => Enumerable.Aggregate(list.Cast<dynamic>(), acc, f.Func),
+            _ => Enumerable.Aggregate(list.Cast<dynamic>(), acc, (Func<dynamic, dynamic, dynamic>)((acc, x) => call(fun, acc, x))),
         };
 
         /// <summary>
@@ -111,11 +151,14 @@ namespace Funship
         ///             funf(x => x > 5))
         /// // list will be fist(6, 5, 4, 3, 2, 1)
         /// </example>
-        public static Fist drop_until(Fist list, Funf predicate) => list switch
+        public static Fist<T> drop_until<T>(Fist<T> list, Funf predicate) => list switch
         {
-            Nilf _ => nilf,
-            Fist _ when call(predicate, list.head) => list,
-            (var _, Fist tail) => drop_until(tail, predicate),
+            Nilf _ => Fist<T>.nilf,
+            _ => predicate switch
+            {
+                WFunf f => fist(list.SkipWhile(x => !f.Func(x))),
+                _ => fist(list.SkipWhile(x => !call(predicate, x))),
+            },
         };
 
         /// <summary>
@@ -130,11 +173,11 @@ namespace Funship
         ///             funf(x => x &lt;= 5));
         /// // list will be fist(6, 5, 4, 3, 2, 1)
         /// </example>
-        public static Fist drop_while(Fist list, Funf predicate) => list switch
+        public static Fist<T> drop_while<T>(Fist<T> list, Funf predicate) => list switch
         {
-            Nilf _ => nilf,
-            Fist _ when !call(predicate, list.head) => list,
-            (var _, Fist tail) => drop_while(tail, predicate),
+            Nilf _ => Fist<T>.nilf,
+            Fist<T> _ when !call(predicate, list.head) => list,
+            (var _, Fist<T> tail) => drop_while(tail, predicate),
         };
 
         /// <summary>
@@ -147,7 +190,11 @@ namespace Funship
         /// var list = filter(fist(1, 2, 3, 4, 5, 6, 5, 4, 3, 2, 1), funf(x => x > 5));
         /// // list will be fist(6)
         /// </example>
-        public static dynamic filter(Fist list, Funf predicate) => FFist.create(list, predicate);
+        public static Fist<T> filter<T>(Fist<T> list, Funf predicate) => predicate switch
+        {
+            WFunf f => fist(list.Where(x => f.Func(x))),
+            _ => fist(list.Where(x => call(predicate, x))),
+        };
 
         /// <summary>
         /// Filters a <see cref="Fist"/> to only items not matching a predicate
@@ -159,22 +206,27 @@ namespace Funship
         /// var list = filter(fist(1, 2, 3, 4, 5, 6, 5, 4, 3, 2, 1), funf(x => x &lt;= 5));
         /// // list will be fist(6)
         /// </example>
-        public static dynamic reject(Fist list, Funf predicate) => FFist.create(list, compose(funf(x => !x), predicate));
+        public static dynamic reject<T>(Fist<T> list, Funf predicate) => predicate switch
+        {
+            WFunf f => fist(list.Where(x => !f.Func(x))),
+            _ => fist(list.Where(x => !call(predicate, x))),
+        };
 
-        /// <summary>
-        /// Writes a <see cref="Fist"/> to <see cref="Console.Out"/> with no newline appended
-        /// </summary>
-        /// <param name="list"><see cref="Fist"/> to print</param>
-        /// <param name="delimiter">Optional <see cref="string"/> to join printed values. Defaults to a single space.</param>
-        /// <returns><paramref name="list"/></returns>
-        /// <remarks>
-        /// Printing a <see cref="Fist"/> causes it to be traversed, meaning that any delayed lazy traversal
-        /// costs will be incurred at the time of this call.
-        /// </remarks>
-        /// <example>
-        /// print(fist(1, 2, 3, 4), "; "); // prints "1; 2; 3; 4" to stdout
-        /// </example>
-        public static Fist print(Fist list, string delimiter = " ") => print(list, Console.Out, delimiter, list);
+
+    /// <summary>
+    /// Writes a <see cref="Fist"/> to <see cref="Console.Out"/> with no newline appended
+    /// </summary>
+    /// <param name="list"><see cref="Fist"/> to print</param>
+    /// <param name="delimiter">Optional <see cref="string"/> to join printed values. Defaults to a single space.</param>
+    /// <returns><paramref name="list"/></returns>
+    /// <remarks>
+    /// Printing a <see cref="Fist"/> causes it to be traversed, meaning that any delayed lazy traversal
+    /// costs will be incurred at the time of this call.
+    /// </remarks>
+    /// <example>
+    /// print(fist(1, 2, 3, 4), "; "); // prints "1; 2; 3; 4" to stdout
+    /// </example>
+    public static Fist<T> print<T>(Fist<T> list, string delimiter = " ") => print(list, Console.Out, delimiter, list);
 
         /// <summary>
         /// Writes a <see cref="Fist"/> to a specified <see cref="TextWriter"/> no newline appended
@@ -192,8 +244,8 @@ namespace Funship
         /// print(fist(1, 2, 3, 4), "; ");
         /// var val = tw.ToString();        // val = "1; 2; 3; 4"
         /// </example>
-        public static Fist print(Fist list, TextWriter tw, string delimiter = " ") => print(list, tw, delimiter, list);
-        private static Fist print(Fist list, TextWriter tw, string delimiter, Fist ret)
+        public static Fist<T> print<T>(Fist<T> list, TextWriter tw, string delimiter = " ") => print(list, tw, delimiter, list);
+        private static Fist<T> print<T>(Fist<T> list, TextWriter tw, string delimiter, Fist<T> ret)
         {
             switch (list)
             {
@@ -202,7 +254,7 @@ namespace Funship
                     tw.Write(head);
                     return ret;
 
-                case (var head, var tail):
+                case (var head, Fist<T> tail):
                     tw.Write($"{head}{delimiter}");
                     return print(tail, tw, delimiter, ret);
 
@@ -224,7 +276,7 @@ namespace Funship
         /// <example>
         /// println(fist(1, 2, 3, 4), "; "); // write "1; 2; 3; 4\n" to stdout
         /// </example>
-        public static Fist println(Fist list, string delimiter = " ") => println(list, Console.Out, delimiter, list);
+        public static Fist<T> println<T>(Fist<T> list, string delimiter = " ") => println(list, Console.Out, delimiter, list);
 
         /// <summary>
         /// Writes a <see cref="Fist"/> to a specified <see cref="TextWriter"/> a newline appended
@@ -242,8 +294,8 @@ namespace Funship
         /// println(fist(1, 2, 3, 4), "; ");
         /// var val = tw.ToString();        // val = "1; 2; 3; 4\n"
         /// </example>
-        public static Fist println(Fist list, TextWriter tw, string delimiter = " ") => println(list, tw, delimiter, list);
-        private static Fist println(Fist list, TextWriter tw, string delimiter, Fist ret)
+        public static Fist<T> println<T>(Fist<T> list, TextWriter tw, string delimiter = " ") => println(list, tw, delimiter, list);
+        private static Fist<T> println<T>(Fist<T> list, TextWriter tw, string delimiter, Fist<T> ret)
         {
             switch (list)
             {
@@ -252,7 +304,7 @@ namespace Funship
                     tw.WriteLine(head);
                     return ret;
 
-                case (var head, var tail):
+                case (var head, Fist<T> tail):
                     tw.Write($"{head}{delimiter}");
                     return println(tail, tw, delimiter, ret);
 
@@ -275,20 +327,16 @@ namespace Funship
         /// <example>
         /// var val = reverse(fist(1, 2, 3, 4))     // val = fist(4, 3, 2, 1)
         /// </example>
-        public static Fist reverse(Fist list) => reverse(list, nilf);
-        private static Fist reverse(Fist list, Fist acc) => list switch
-        {
-            Nilf _ => acc,
-            (var head, var tail) => reverse(tail, new SFist(head, acc))
-        };
+        public static Fist<T> reverse<T>(Fist<T> list) => fist(list.Reverse());
+        public static Fist reverse(Fist list) => fist(list.Cast<dynamic>().Reverse());
 
         /// <summary>
         /// Determines whether a given predicate <see cref="Funf"/> is <c>true</c>
         /// for all elements in a <see cref="Fist"/>.
         /// </summary>
         /// <param name="list"><see cref="Fist"/> whose elements will be tested against the predicate</param>
-        /// <param name="fun"><see cref="Funf"/> that should accept a value and return a <see cref="bool"/></param>
-        /// <returns><c>true</c> if <paramref name="fun"/> returns <c>true</c> for all elements in the list, else <c>false</c></returns>
+        /// <param name="predicate"><see cref="Funf"/> that should accept a value and return a <see cref="bool"/></param>
+        /// <returns><c>true</c> if <paramref name="predicate"/> returns <c>true</c> for all elements in the list, else <c>false</c></returns>
         /// <remarks>
         /// Testing elements of a <see cref="Fist"/> against a predicate causes it to be traversed, meaning that any delayed lazy traversal
         /// costs will be incurred at the time of this call. However, traversal will stop as soon as the first
@@ -297,33 +345,41 @@ namespace Funship
         /// <example>
         /// var val = all(fist(1, 2, 3, 4), funf(x => x &lt; 5))     // val = true
         /// </example>
-        public static bool all(Fist list, Funf fun) => list switch
+        public static bool all<T>(Fist<T> list, Funf predicate) => list switch
         {
             Nilf _ => true,
-            (var head, _) when !call(fun, head) => false,
-            (_, Fist tail) => all(tail, fun),
+            _ => predicate switch
+            {
+                WFunf f => list.All(x => f.Func(x)),
+                _ => list.All(x => call(predicate, x)),
+            },
         };
+        public static bool all(Fist list, Funf predicate) => all(fist(list.Cast<dynamic>()), predicate);
 
         /// <summary>
         /// Determines whether a given predicate <see cref="Funf"/> is <c>true</c>
         /// for any element in a <see cref="Fist"/>.
         /// </summary>
         /// <param name="list"><see cref="Fist"/> whose elements will be tested against the predicate</param>
-        /// <param name="fun"><see cref="Funf"/> that should accept a value and return a <see cref="bool"/></param>
-        /// <returns><c>true</c> if <paramref name="fun"/> returns <c>true</c> for at least one element in the list, else <c>false</c></returns>
+        /// <param name="predicate"><see cref="Funf"/> that should accept a value and return a <see cref="bool"/></param>
+        /// <returns><c>true</c> if <paramref name="predicate"/> returns <c>true</c> for at least one element in the list, else <c>false</c></returns>
         /// <remarks>
         /// Testing elements of a <see cref="Fist"/> against a predicate causes it to be traversed, meaning that any delayed lazy traversal
         /// costs will be incurred at the time of this call. However, traversal will stop as soon as the first
         /// <c>true</c> predicate return value is encounted.
         /// </remarks>
         /// <example>
-        /// var val = any(fist(1, 2, 3, 4), funf(x => x > 5))     // val = false
+        /// var val = any(fist(1, 2, 3, 4), funf(x => x &gt; 5))     // val = false
         /// </example>
-        public static bool any(Fist list, Funf fun) => list switch
+        public static bool any<T>(Fist<T> list, Funf predicate) => list switch
         {
             Nilf _ => false,
-            (var head, _) when call(fun, head) => true,
-            (_, Fist tail) => any(tail, fun),
+            _ => predicate switch
+            {
+                WFunf f => list.Any(x => f.Func(x)),
+                _ => list.Any(x => call(predicate, x)),
+            },
         };
+        public static bool any(Fist list, Funf predicate) => any(fist(list.Cast<dynamic>()), predicate);
     }
 }

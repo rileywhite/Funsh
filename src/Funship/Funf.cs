@@ -273,10 +273,38 @@ namespace Funship
 
         #endregion
 
+        #region Operators
+
+        public static Funf operator <(Funf f, Funf g) => compose(f, g);
+
+        public static Funf operator >(Funf f, Funf g) => compose(g, f);
+
+        /// <summary>
+        /// Back pipe
+        /// </summary>
+        /// <param name="f"><see cref="Funf"/> which should receive the args piped from the right</param>
+        /// <param name="args">Args that should be piped to <see cref="f"/></param>
+        /// <returns></returns>
+        public static Funf operator <(Funf f, IEnumerable<dynamic> args) => capture(f, args);
+
+        /// <summary>
+        /// Forward pipe
+        /// </summary>
+        /// <param name="args">Args that should be piped to <paramref name="f"/></param>
+        /// <param name="f"><see cref="Funf"/> that should recevie the piped args</param>
+        /// <returns></returns>
+        public static Funf operator >(Funf f, IEnumerable<dynamic> args) => args switch
+        {
+     //       Funf g => capture(g, f),
+            _ => funf(() => args.Append(f)),
+        };
+
+        #endregion
+
         /// <summary>
         /// Simple wrapped dotnet function
         /// </summary>
-        private readonly struct WFunf : Funf
+        internal readonly struct WFunf : Funf
         {
             #region Constructors
 
@@ -384,7 +412,7 @@ namespace Funship
 
             #endregion
 
-            private dynamic Func { get; }
+            public dynamic Func { get; }
 
             public int arity { get; }
             private IEnumerable<dynamic> args => new dynamic[0];
@@ -423,7 +451,7 @@ namespace Funship
         /// </summary>
         private readonly struct CompFunf : Funf
         {
-            public CompFunf(Funf g, Funf f, int arity, IEnumerable<dynamic> args)
+            public CompFunf(Funf f, Funf g, int arity, IEnumerable<dynamic> args)
             {
                 this.f = f;
                 this.g = g;
@@ -443,7 +471,7 @@ namespace Funship
                 var allArgs = this.args.Concat(moreArgs).ToArray();
                 return allArgs.Length switch
                 {
-                    var l when l < f.arity => new CompFunf(g, f, f.arity + g.arity - l, allArgs),
+                    var l when l < f.arity => new CompFunf(f, g, f.arity + g.arity - l, allArgs),
                     _ => call(g, call(f, allArgs))
                 };
             }

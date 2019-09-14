@@ -72,7 +72,7 @@ is available to the function on the left.
 ```c#
 var f = funf(x => 2 * x);
 var g = funf((x, y) => x - y);
-var h = compose(f, g);
+var h = compose(g, f);
 var x = call(h, 2, 1);          // x == 3, which is the result of g(f(2), 1)
 ```
 

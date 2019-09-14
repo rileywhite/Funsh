@@ -15,10 +15,14 @@
 /***************************************************************************/
 
 using System;
+using System.IO;
 using System.Linq;
+
 using static Funship.Fist;                                    // Get access to functional lists.
 using static Funship.Funf;                                    // Get access to function functions.  
 
+
+using Funship;
 
 namespace Sandbox
 {
@@ -26,32 +30,31 @@ namespace Sandbox
     {
         static void Main(string[] _)
         {
-            var list = fist(1, 2, 3, 4);                            // New functional list [1, 2, 3, 4]
+            var list = fist(Enumerable.Range(1, 1_000));
+            var reducerFunf = funf((x, acc) => x + acc);
 
-            var result = reduce(list, funf((x, acc) => x * acc));   // Functional reduce call to multiply list items
-            Console.WriteLine(result);                        // Prints 24
+            Console.WriteLine("Starting Linq Sum...");
+            var startLinq = DateTimeOffset.Now;
+            for (int i = 0; i < 1_000_000; i++)
+            {
+                StreamWriter.Null.Write(list.Aggregate((x, acc) => x + acc));
+            }
+            var endLinq = DateTimeOffset.Now;
+            Console.WriteLine("Done");
+            Console.WriteLine();
 
-            var mappedList = map(list, funf(x => 2 * x));           // Map to a new list with each element doubled
-            println(mappedList);                              // Prints 2, 4, 6, 8
+            Console.WriteLine("Starting Funship reduce...");
+            var startFunship = DateTimeOffset.Now;
+            for (int i = 0; i < 1_000_000; i++)
+            {
+                StreamWriter.Null.Write(reduce(list, reducerFunf));
+            }
+            var endFunship = DateTimeOffset.Now;
+            Console.WriteLine("Done");
+            Console.WriteLine();
 
-            var bigList = fist(Enumerable.Range(0, 1000)); // List with 10 thousand items. Will be lazy-created. (Tail.Fody doesn't currently catch this call in Debug compiles.)
-
-            var max = reduce(bigList, funf((x, acc) => x > acc ? x : acc));
-            Console.WriteLine(max);                            // Prints 999
-
-            var fun = funf(x => x + 1);
-            Console.WriteLine(call(fun, 10));
-
-            var twoparam = funf((x, y) => x - y);
-            Funship.Funf oneparam = call(twoparam, 6);
-            Console.WriteLine(call(oneparam, 2));
-
-            var partialCallOneParam = capture(twoparam, 6);
-            var partialCallZeroParam = capture(partialCallOneParam, 1);
-            Console.WriteLine(call(partialCallZeroParam));
-
-            Console.WriteLine($"Everything greater than 5? {all(fist(6, 7, 8, 9), funf(x => x > 5))}");
-            Console.WriteLine($"Is this other stuff greater than 5? {all(fist(6, 4, 8, 9), funf(x => x > 5))}");
+            Console.WriteLine($"Linq time    :{endLinq - startLinq}");
+            Console.WriteLine($"Funship time :{endFunship - startFunship}");
         }
     }
 }

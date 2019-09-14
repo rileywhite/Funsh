@@ -19,17 +19,36 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 
-using static Funship.Funf;
-
 namespace Funship
 {
+    public static class Finq
+    {
+        public static void Deconstruct(this IEnumerable source, out dynamic head, out Fist tail) =>
+            Deconstruct(source.Cast<dynamic>(), out head, out tail);
+
+        public static void Deconstruct<TEnumerable, T>(this TEnumerable source, out T head, out Fist tail)
+            where TEnumerable : IEnumerable<T>
+        {
+            if (source.Any())
+            {
+                head = source.First();
+                tail = Fist.fist(source.Skip(1));
+            }
+            else
+            {
+                throw new NotSupportedException(
+                    "Cannot deconstruct an empty IEnumerable<T>. Maybe you're missing a match against `Nilf _`?");
+            }
+        }
+    }
+
     /// <summary>
     /// Represents a functional list that is constructed with a <see cref="head"/>,
     /// which is the first element in the functional list, and a <see cref="tail"/>
     /// which reprents the remainder of the functional list without the tail.
     /// </summary>
     /// <remarks>
-    /// Create a fist using <see cref="fist(dynamic[])"/> or <see cref="fist{T}(IEnumerable{T})"/>.
+    /// Create a fist using <see cref="fist{T}(T[])"/> or <see cref="fist{T}(IEnumerable{T})"/>.
     /// 
     /// A <see cref="Fist"/> can be matched as a <see cref="ValueTuple{dynamic, Fist}"/>
     /// in a <c>switch</c> statement.
@@ -55,7 +74,7 @@ namespace Funship
     ///     };
     /// }
     /// </example>
-    public partial interface Fist : IEnumerable<object>
+    public partial interface Fist : IEnumerable
     {
         /// <summary>
         /// Provides a <see cref="ValueTuple{dynamic, Fist}"/> deconstruction of the <see cref="Fist"/>
@@ -80,10 +99,13 @@ namespace Funship
         /// </summary>
         public bool is_nil { get; }
 
+        public static Fist nilf => new Nilf<dynamic>();
+
         /// <summary>
-        /// Singleton <see cref="Nilf"/> that is used to represent an empty <see cref="Fist"/>.
+        /// Creates a new <see cref="Fist"/> by appending a head to an existing tail.
         /// </summary>
-        public static readonly Fist nilf = new Nilf();
+        /// <returns>New <see cref="nilf"/>, the empty functional list</returns>
+        public static Fist fist() => Fist<dynamic>.nilf;
 
         /// <summary>
         /// Creates a new <see cref="Fist"/> by appending a head to an existing tail.
@@ -91,16 +113,17 @@ namespace Funship
         /// <param name="head"></param>
         /// <param name="tail"></param>
         /// <returns>New fist with the given <paramref name="head"/> and <paramref name="tail"/></returns>
-        public static Fist fist(dynamic head, Fist tail) => head switch
+        public static Fist<T> fist<T>(T head, IEnumerable<T> tail) => head switch
         {
-            Nilf _ => nilf,
-            _ => new SFist(head, tail),
+            Nilf _ => Fist<T>.nilf,
+            _ => LinqFist<T>.__new(Enumerable.Prepend(tail, head)),
         };
+        public static Fist<dynamic> fist<T>(T head, IEnumerable tail) =>
+            fist((object)head, tail.Cast<object>());
 
         /// <summary>
         /// Converts a given <see cref="IEnumerable{T}"/> to a <see cref="Fist"/>.
         /// </summary>
-        /// <typeparam name="T">Type contained in the <see cref="IEnumerable{T}"/></typeparam>
         /// <param name="vals">Collection of items that the new <see cref="Fist"/> should contain in order</param>
         /// <returns><see cref="Fist"/> containing the items in <paramref name="vals"/></returns>
         /// <remarks>
@@ -111,11 +134,10 @@ namespace Funship
         /// var list = fist(new [] { 1, 2, 3, 4 });    // list = Fist with head 1 and tail of fist(2, 3, 4)
         /// var empty_list = fist(new object[0]);      // empty_list = <see cref="nilf"/>
         /// </example>
-        public static Fist fist<T>(IEnumerable<T> vals) => vals switch
+        public static Fist<T> fist<T>(IEnumerable<T> vals) => vals switch
         {
-            null => nilf,
-            _ when !vals.Any() => nilf,
-            _ => new DFist<T>(vals.First(), vals.Skip(1)),
+            _ when !vals.Any() => Fist<T>.nilf,
+            _ => LinqFist<T>.__new(vals),
         };
 
         /// <summary>
@@ -132,108 +154,56 @@ namespace Funship
         /// var list = fist(1, 2, 3, 4);    // list = Fist with head 1 and tail of fist(2, 3, 4)
         /// var empty_list = fist();        // empty_list = <see cref="nilf"/>
         /// </example>
-        public static Fist fist(params dynamic[] vals) => vals switch
+        public static Fist<T> fist<T>(params T[] vals) => vals.Length switch
         {
-            _ when vals.Length == 1 && vals[0] == null => nilf,
-            _ => fist(vals.AsEnumerable()),
-        };
-
-        /// <summary>
-        /// Tests equality between two <see cref="Fist"/> instances.
-        /// </summary>
-        /// <param name="left"></param>
-        /// <param name="right"></param>
-        /// <returns></returns>
-        /// <remarks>
-        /// Testing equality of two <see cref="Fist"/> instances causes them to be traversed in parallel,
-        /// meaning that any delayed lazy traversal costs will be incurred at the time of this call. However,
-        /// traversal stops at the first pair of <see cref="head"/> elements that are not equal.
-        ///
-        /// Two fists are considered equal if their items, traversed in parallel, are each equal as
-        /// determined by a call to <see cref="object.Equals(object, object)"/>.
-        /// </remarks>
-        public static bool equals(Fist left, Fist right) => (left, right) switch
-        {
-            (Nilf _, Nilf _) => true,
-            ((_, _), Nilf _) => false,
-            (Nilf _, (_, _)) => false,
-            ((var headL, Fist tailL), (var headR, Fist tailR)) when object.Equals(headL, headR) => equals(tailL, tailR),
-            _ => false,
-        };
-
-        /// <summary>
-        /// Generates a hash code for a <see cref="Fist"/>
-        /// </summary>
-        /// <param name="list"><see cref="Fist"/> to generate hash code for</param>
-        /// <returns>Generated hash code</returns>
-        /// <remarks>
-        /// Calculating a hash code for a <see cref="Fist"/> causes it to be traversed, meaning that any
-        /// delayed lazy traversal costs will be incurred at the time of this call.
-        /// </remarks>
-        public static int hash_code(Fist list) => reduce(list, 0, funf((x, acc) => 486187739 * acc + (x.GetHashCode())));
-
-        private static IEnumerator<object> enumerator(Fist list) => new FistEnumerator(list);
-
-        private class FistEnumerator : IEnumerator<object>
-        {
-            public FistEnumerator(Fist list)
+            0 => Fist<T>.nilf,
+            1 => vals[0] switch
             {
-                // the nullable logic is here because MoveNext is called before the first value is read
-                this.InitialList = list;
-                this.List = default;
-            }
-
-            private Fist InitialList { get; set; }
-#nullable enable
-            private Fist? List { get; set; }
-#nullable disable
-
-            public object Current => this.List.head;
-
-            public void Dispose()
-            {
-                this.InitialList = nilf;
-                this.List = null;
-            }
-
-            public bool MoveNext() => !(this.List = this.List == null ? this.InitialList : this.List.tail).is_nil;
-
-            public void Reset() => this.List = null;
-        }
+                null => Fist<T>.nilf,
+                _ => LinqFist<T>.__new(vals),
+            },
+            _ => LinqFist<T>.__new(vals),
+        };
 
         #region Fist types
 
         /// <summary>
         /// Nil list. Use <see cref="nilf"/> as a shortcut to get an instance.
         /// </summary>
-        public readonly struct Nilf : Fist
+        public interface Nilf : Fist { }
+
+        private readonly struct LinqFist<T> : Fist<T>
         {
-            /// <summary>
-            /// <see cref="Nilf"/> deconstructs into (<see cref="nilf"/>, <see cref="nilf"/>).
-            /// </summary>
-            /// <param name="head">Will be <see cref="nilf"/></param>
-            /// <param name="tail">Will be <see cref="nilf"/></param>
-            public void Deconstruct(out dynamic head, out Fist tail)
+            public static Fist<T> __new(IEnumerable<T> source) => new LinqFist<T>(source);
+
+            private LinqFist(IEnumerable<T> source)
             {
-                head = nilf;
-                tail = nilf;
+                if (!source.Any()) { throw new ArgumentException("Must have at least one element", nameof(source)); }
+                this.source = source;
+                this.head = source.First();
+                this.tail = new Lazy<Fist<T>>(() =>
+                    {
+                        var tailSource = source.Skip(1);
+                        return tailSource.Any() ? (Fist<T>)new LinqFist<T>(tailSource) : (Fist<T>)Fist<T>.nilf;
+                    });
             }
 
-            /// <summary>
-            /// Gets <see cref="nilf"/>
-            /// </summary>
-            public dynamic head => nilf;
+            private IEnumerable<T> source { get; }
 
-            /// <summary>
-            /// Gets <see cref="nilf"/>
-            /// </summary>
-            public Fist tail => nilf;
+            public T head { get; }
+            dynamic Fist.head => this.head;
 
-            /// <summary>
-            /// Always <c>true</c>
-            /// </summary>
-            public bool is_nil => true;
+            private Lazy<Fist<T>> tail { get; }
+            Fist<T> Fist<T>.tail => this.tail.Value;
+            Fist Fist.tail => this.tail.Value;
 
+            public void Deconstruct(out dynamic head, out Fist tail)
+            {
+                head = this.head;
+                tail = this.tail.Value;
+            }
+
+            public bool is_nil => false;
 #nullable enable
             /// <summary>
             /// Tests equality
@@ -249,185 +219,48 @@ namespace Funship
             /// <returns></returns>
             public override int GetHashCode() => hash_code(this);
 
-            IEnumerator IEnumerable.GetEnumerator() => (this as IEnumerable<object>).GetEnumerator();
-            IEnumerator<object> IEnumerable<object>.GetEnumerator() => enumerator(this);
-        }
-
-        /// <summary>
-        /// Static list
-        /// </summary>
-        private readonly struct SFist : Fist
-        {
-            internal SFist(dynamic head)
-            {
-                if (nilf.Equals(head)) { throw new ArgumentException("DFist head cannot be nilf"); }
-                this.head = head;
-                this.tail = nilf;
-            }
-
-            internal SFist(dynamic head, Fist tail)
-            {
-                if (nilf.Equals(head)) { throw new ArgumentException("DFist head cannot be nilf"); }
-                this.head = head;
-                this.tail = tail;
-            }
-
-            public void Deconstruct(out dynamic head, out Fist tail)
-            {
-                head = this.head;
-                tail = this.tail;
-            }
-
-            public dynamic head { get; }
-            public Fist tail { get; }
-            public bool is_nil => false;
-
-#nullable enable
-            public override bool Equals(object? obj) => obj != null && obj is Fist && equals(this, (Fist)obj);
-#nullable disable
-
-            public override int GetHashCode() => hash_code(this);
-
-            IEnumerator IEnumerable.GetEnumerator() => this.GetEnumerator();
-            public IEnumerator<object> GetEnumerator() => enumerator(this);
-        }
-
-        /// <summary>
-        /// Dynamic list
-        /// </summary>
-        private readonly struct DFist<T> : Fist
-        {
-            internal DFist(dynamic head, IEnumerable<T> tail)
-            {
-                if (nilf.Equals(head)) { throw new ArgumentException("DFist head cannot be nilf"); }
-                this.head = head;
-                this.Tail = new Lazy<Fist>(() => tail.Any() ? new DFist<T>(tail.First(), tail.Skip(1)) : nilf);
-            }
-
-            public void Deconstruct(out dynamic head, out Fist tail)
-            {
-                head = this.head;
-                tail = this.Tail.Value;
-            }
-
-            public dynamic head { get; }
-
-            private Lazy<Fist> Tail { get; }
-            Fist Fist.tail => this.Tail.Value;
-
-            public bool is_nil => false;
-
-
-#nullable enable
-            public override bool Equals(object? obj) => obj != null && obj is Fist && equals(this, (Fist)obj);
-#nullable disable
-
-            public override int GetHashCode() => hash_code(this);
-
-            IEnumerator IEnumerable.GetEnumerator() => this.GetEnumerator();
-            public IEnumerator<object> GetEnumerator() => enumerator(this);
-        }
-
-        /// <summary>
-        /// Mapped list
-        /// </summary>
-        private readonly struct MFist : Fist
-        {
-            internal MFist(Fist src, Funf fun)
-            {
-                switch (src)
-                {
-                    case (var head, Nilf _):
-                        this.Head = new Lazy<dynamic>(() =>
-                        {
-                            var h = call(fun, head);
-                            return h;
-                        });
-                        this.Tail = new Lazy<Fist>(() => nilf);
-                        break;
-
-                    case var _:
-                        this.Head = new Lazy<dynamic>(() =>
-                        {
-                            var h = call(fun, src.head);
-                            return h;
-                        });
-                        this.Tail = new Lazy<Fist>(() => new MFist(src.tail, fun));
-                        break;
-                }
-            }
-
-            public void Deconstruct(out dynamic head, out Fist tail)
-            {
-                head = this.Head.Value;
-                tail = this.Tail.Value;
-            }
-
-            private Lazy<dynamic> Head { get; }
-            dynamic Fist.head => this.Head.Value;
-
-            private Lazy<Fist> Tail { get; }
-            Fist Fist.tail => this.Tail.Value;
-
-            public bool is_nil => false;
-
-#nullable enable
-            public override bool Equals(object? obj) => obj != null && obj is Fist && equals(this, (Fist)obj);
-#nullable disable
-
-            public override int GetHashCode() => hash_code(this);
-
-            IEnumerator IEnumerable.GetEnumerator() => this.GetEnumerator();
-            public IEnumerator<object> GetEnumerator() => enumerator(this);
-        }
-
-        /// <summary>
-        /// A <see cref="Fist"/> that filters items based on
-        /// a given predicate
-        /// </summary>
-        private readonly struct FFist : Fist
-        {
-            /// <summary>
-            /// Creates a new <see cref="FFist"/>
-            /// </summary>
-            /// <param name="source">Source <see cref="Fist"/> that has a filter applied</param>
-            /// <param name="predicate"><see cref="Funf"/> of form f(x) -> bool used to filter the list</param>
-            /// <returns>New <see cref="FFist"/> if at least one item gets a <c>true</c> result from <paramref name="predicate"/>, else <see cref="nilf"/></returns>
-            public static Fist create(Fist source, Funf predicate) => drop_until(source, predicate) switch
-            {
-                Nilf _ => nilf,
-                (var head, Fist tail) => new FFist(head, tail, predicate),
-            };
-
-            private FFist(dynamic head, Fist tail_source, Funf predicate)
-            {
-                this.head = head;
-                this.tail = new Lazy<Fist>(() => create(tail_source, predicate));
-            }
-
-            public dynamic head { get; }
-
-            public Lazy<Fist> tail { get; }
-            Fist Fist.tail => this.tail.Value;
-
-            public bool is_nil => false;
-
-            public void Deconstruct(out dynamic head, out Fist tail)
-            {
-                head = this.head;
-                tail = this.tail.Value;
-            }
-
-#nullable enable
-            public override bool Equals(object? obj) => obj != null && obj is Fist && equals(this, (Fist)obj);
-#nullable disable
-
-            public override int GetHashCode() => hash_code(this);
-
-            IEnumerator IEnumerable.GetEnumerator() => this.GetEnumerator();
-            public IEnumerator<object> GetEnumerator() => enumerator(this);
+            IEnumerator IEnumerable.GetEnumerator() => this.source.GetEnumerator();
+            IEnumerator<T> IEnumerable<T>.GetEnumerator() => this.source.GetEnumerator();
         }
 
         #endregion
+    }
+
+    public interface Fist<out T> : Fist, IEnumerable<T>
+    {
+        new T head { get; }
+        new Fist<T> tail { get; }
+
+        internal new static Fist<T> nilf => new Nilf<T>();
+    }
+
+    internal readonly struct Nilf<T> : Fist.Nilf, Fist<T>
+    {
+        dynamic Fist.head => throw new NotSupportedException("Cannot get head of nilf");
+        T Fist<T>.head => throw new NotImplementedException("Cannot get head of nilf");
+
+        Fist Fist.tail => this;
+        Fist<T> Fist<T>.tail => this;
+
+        public bool is_nil => true;
+
+#nullable enable
+        /// <summary>
+        /// Tests equality
+        /// </summary>
+        /// <param name="obj">Object to test against</param>
+        /// <returns><c>true</c> for any other <see cref="Fist.Nilf"/>, else <c>false</c></returns>
+        public override bool Equals(object? obj) => obj == null || obj is Fist.Nilf;
+#nullable disable
+
+        /// <summary>
+        /// Hash code for <see cref="Fist.Nilf"/> is always 0;
+        /// </summary>
+        /// <returns></returns>
+        public override int GetHashCode() => 0;
+
+        IEnumerator IEnumerable.GetEnumerator() => Enumerable.Empty<object>().GetEnumerator();
+        IEnumerator<T> IEnumerable<T>.GetEnumerator() => Enumerable.Empty<T>().GetEnumerator();
+        void Fist.Deconstruct(out dynamic head, out Fist tail) => throw new NotImplementedException();
     }
 }

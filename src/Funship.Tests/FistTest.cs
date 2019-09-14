@@ -61,18 +61,18 @@ namespace Funship.Tests
         }
 
         [Fact]
-        public void nilf_is_a_singleton()
+        public void empty_lists_are_equivalent()
         {
-            Assert.Same(nilf, fist());
-            Assert.Same(nilf, fist(new int[] { }));
-            Assert.NotSame(nilf, fist(new int[] { 1 }));
+            Assert.Equal(nilf, fist());
+            Assert.Equal(nilf, fist(new int[] { }));
+            Assert.NotEqual(nilf, fist(new int[] { 1 }));
         }
 
         [Fact]
         public void can_reduce_list()
         {
             var list = fist(1, 2, 3, 4);
-            var result = reduce(list, funf((x, acc) => x * acc));
+            var result = reduce(list, funf((acc, x) => acc * x));
             Assert.Equal(24, result);
         }
 
@@ -184,7 +184,7 @@ namespace Funship.Tests
             var headAndEmpty = fist(head, nilf);
 
             Assert.Equal(fist(15, 1, 2, 3, 4, 5), headAndTail);
-            Assert.Equal(fist(15), headAndEmpty);
+            Assert.Equal<Fist>(fist(15), headAndEmpty);
         }
 
         [Fact]
@@ -192,7 +192,7 @@ namespace Funship.Tests
         {
             var touched = false;
 
-            foreach(var item in nilf)
+            foreach (var item in nilf)
             {
                 touched = true;
             }
@@ -207,7 +207,7 @@ namespace Funship.Tests
             var list = fist(1, 2, 3, 4, 5);
 
             var i = 0;
-            foreach(var item in list)
+            foreach (var item in list)
             {
                 Assert.Equal(items[i], item);
                 ++i;
