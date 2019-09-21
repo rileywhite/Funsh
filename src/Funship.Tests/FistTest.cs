@@ -220,19 +220,19 @@ namespace Funship.Tests
         {
             Assert.Equal(
                 fist(2, 3, 4, 5, 6, 7, 8, 9, 10),
-                drop_until(fist(1, 2, 3, 4, 5, 6, 7, 8, 9, 10), funf(x => x % 2 == 0)));
+                drop_until(fist(1, 2, 3, 4, 5, 6, 7, 8, 9, 10), funf<bool>(x => x % 2 == 0)));
 
             Assert.Equal(
                 fist(6, 7, 8, 9, 10),
-                drop_until(fist(Enumerable.Range(1, 10)), funf(x => x > 5)));
+                drop_until(fist(Enumerable.Range(1, 10)), funf<bool>(x => x > 5)));
 
             Assert.Equal(
                 fist(6, 5, 4, 3, 2, 1),
-                drop_until(fist(1, 2, 3, 4, 5, 6, 5, 4, 3, 2, 1), funf(x => x > 5)));
+                drop_until(fist(1, 2, 3, 4, 5, 6, 5, 4, 3, 2, 1), funf<bool>(x => x > 5)));
 
             Assert.Equal(
                 nilf,
-                drop_until(fist(1, 2, 3, 4, 5, 5, 4, 3, 2, 1), funf(x => x > 5)));
+                drop_until(fist(1, 2, 3, 4, 5, 5, 4, 3, 2, 1), funf<bool>(x => x > 5)));
         }
 
         [Fact]
@@ -240,19 +240,19 @@ namespace Funship.Tests
         {
             Assert.Equal(
                 fist(3, 4, 5, 6, 7, 8, 9, 10),
-                drop_while(fist(2, 3, 4, 5, 6, 7, 8, 9, 10), funf(x => x % 2 == 0)));
+                drop_while(fist(2, 3, 4, 5, 6, 7, 8, 9, 10), funf<bool>(x => x % 2 == 0)));
 
             Assert.Equal(
                 fist(6, 7, 8, 9, 10),
-                drop_while(fist(Enumerable.Range(1, 10)), funf(x => x <= 5)));
+                drop_while(fist(Enumerable.Range(1, 10)), funf<bool>(x => x <= 5)));
 
             Assert.Equal(
                 fist(6, 5, 4, 3, 2, 1),
-                drop_while(fist(1, 2, 3, 4, 5, 6, 5, 4, 3, 2, 1), funf(x => x <= 5)));
+                drop_while(fist(1, 2, 3, 4, 5, 6, 5, 4, 3, 2, 1), funf<bool>(x => x <= 5)));
 
             Assert.Equal(
                 nilf,
-                drop_while(fist(1, 2, 3, 4, 5, 5, 4, 3, 2, 1), funf(x => x <= 5)));
+                drop_while(fist(1, 2, 3, 4, 5, 5, 4, 3, 2, 1), funf<bool>(x => x <= 5)));
         }
 
         [Fact]
@@ -260,19 +260,19 @@ namespace Funship.Tests
         {
             Assert.Equal(
                 fist(2, 4, 6, 8, 10),
-                filter(fist(1, 2, 3, 4, 5, 6, 7, 8, 9, 10), funf(x => x % 2 == 0)));
+                filter(fist(1, 2, 3, 4, 5, 6, 7, 8, 9, 10), funf<bool>(x => x % 2 == 0)));
 
             Assert.Equal(
                 fist(6, 7, 8, 9, 10),
-                filter(fist(Enumerable.Range(1, 10)), funf(x => x > 5)));
+                filter(fist(Enumerable.Range(1, 10)), funf<bool>(x => x > 5)));
 
             Assert.Equal(
                 fist(6),
-                filter(fist(1, 2, 3, 4, 5, 6, 5, 4, 3, 2, 1), funf(x => x > 5)));
+                filter(fist(1, 2, 3, 4, 5, 6, 5, 4, 3, 2, 1), funf<bool>(x => x > 5)));
 
             Assert.Equal(
                 nilf,
-                filter(fist(1, 2, 3, 4, 5, 5, 4, 3, 2, 1), funf(x => x > 5)));
+                filter(fist(1, 2, 3, 4, 5, 5, 4, 3, 2, 1), funf<bool>(x => x > 5)));
         }
 
         [Fact]
@@ -280,19 +280,19 @@ namespace Funship.Tests
         {
             Assert.Equal(
                 fist(1, 3, 5, 7, 9),
-                reject(fist(1, 2, 3, 4, 5, 6, 7, 8, 9, 10), funf(x => x % 2 == 0)));
+                reject(fist(1, 2, 3, 4, 5, 6, 7, 8, 9, 10), funf<bool>(x => x % 2 == 0)));
 
             Assert.Equal(
                 fist(6, 7, 8, 9, 10),
-                reject(fist(Enumerable.Range(1, 10)), funf(x => x <= 5)));
+                reject(fist(Enumerable.Range(1, 10)), funf<bool>(x => x <= 5)));
 
             Assert.Equal(
                 fist(6),
-                reject(fist(1, 2, 3, 4, 5, 6, 5, 4, 3, 2, 1), funf(x => x <= 5)));
+                reject(fist(1, 2, 3, 4, 5, 6, 5, 4, 3, 2, 1), funf<bool>(x => x <= 5)));
 
             Assert.Equal(
                 nilf,
-                reject(fist(1, 2, 3, 4, 5, 5, 4, 3, 2, 1), funf(x => x <= 5)));
+                reject(fist(1, 2, 3, 4, 5, 5, 4, 3, 2, 1), funf<bool>(x => x <= 5)));
         }
     }
 }

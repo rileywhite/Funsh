@@ -48,7 +48,8 @@ namespace Funship
         /// var i = compose(h, f);      // i(x) -> f(h(x)) -> f(g(f(x)))
         /// var y = call(i, 10);        // y = 14
         /// </example>
-        public static Funf compose(Funf f, Funf g) => new CompFunf(f, g, g.arity + f.arity - 1, Enumerable.Empty<dynamic>());
+        public static Funf<TFResult> compose<TFResult>(Funf<TFResult> f, Funf<dynamic> g) =>
+            new CompFunf<TFResult>(f, g, g.arity + f.arity - 1, Enumerable.Empty<dynamic>());
 
         /// <summary>
         /// Creates a new <see cref="Funf"/> with passed args enclosed. 
@@ -78,11 +79,11 @@ namespace Funship
         /// var y = call(i);            // y = -13
         /// var z = call(h, 18, 24, 30) // z = <see cref="IEnumerable{dynamic}"/> of [-13, 24, 30]
         /// </example>
-        public static Funf capture(Funf f, params dynamic[] args) => capture(f, fist((IEnumerable<dynamic>)args));
-        private static Funf capture(Funf f, IEnumerable<dynamic> args) => capture_and_compose(f, args) switch
+        public static Funf<TResult> capture<TResult>(Funf<TResult> f, params dynamic[] args) => capture(f, fist((IEnumerable<dynamic>)args));
+        private static Funf<TResult> capture<TResult>(Funf<TResult> f, IEnumerable<dynamic> args) => capture_and_compose(f, args) switch
         {
-            (var fun, var empty) when !empty.Any() => fun,
-            (var fun, var final_args) => capture(new CapFunf(fun, final_args, fun.arity - final_args.Count())),
+            (Funf<TResult> fun, var empty) when !empty.Any() => fun,
+            (Funf<TResult> fun, var final_args) => capture(new CapFunf<TResult>(fun, final_args, fun.arity - final_args.Count())),
         };
 
         /// <summary>
@@ -121,21 +122,36 @@ namespace Funship
         /// var y = call(i);            // y = -13
         /// var z = call(h, 18, 24, 30) // z = <see cref="IEnumerable{dynamic}"/> of [-13, 24, 30]
         /// </example>
-        public static dynamic call(Funf f, params dynamic[] args) => call(f, args.AsEnumerable());
-        private static dynamic call(Funf f, IEnumerable<dynamic> args) => capture_and_compose(f, args) switch
+        public static CallResult<TResult> call<TResult>(Funf<TResult> f, params dynamic[] args) => call(f, args.AsEnumerable());
+        //private static CallResult<TResult> call<TResult>(Funf<TResult> f, IEnumerable<dynamic> args) => capture_and_compose(f, args) switch
+        //{
+        //    (WFunf<TResult> fun, var final_args) => fun.invoke_func(final_args),
+        //    (CapFunf<TResult> fun, var final_args) => fun.collect_args_and_call(final_args),
+        //    (CompFunf<TResult> fun, var final_args) => fun.collect_args_and_call(final_args),
+        //    _ => throw new NotSupportedException(),
+        //};
+        private static CallResult<TResult> call<TResult>(Funf<TResult> f, IEnumerable<dynamic> args)
         {
-            (WFunf fun, var final_args) => fun.invoke_func(final_args),
-            (CapFunf fun, var final_args) => fun.collect_args_and_call(final_args),
-            (CompFunf fun, var final_args) => fun.collect_args_and_call(final_args),
-            _ => throw new NotSupportedException(),
-        };
+            var fun_and_args = capture_and_compose(f, args);
+            switch (fun_and_args)
+            {
+                case (WFunf<TResult> fun, var final_args): return fun.invoke_func(final_args);
+                case (CapFunf<TResult> fun, var final_args): return fun.collect_args_and_call(final_args);
 
-        private static (Funf, IEnumerable<dynamic> args) capture_and_compose(Funf g, params dynamic[] args) => capture_and_compose(g, args.AsEnumerable());
-        private static (Funf, IEnumerable<dynamic> args) capture_and_compose(Funf g, IEnumerable<dynamic> args) =>
+                case (CompFunf<TResult> fun, var final_args):
+                    var ret = fun.collect_args_and_call(final_args);
+                    return ret;
+
+                default: throw new NotSupportedException();
+            }
+        }
+
+        private static (Funf<TResult>, IEnumerable<dynamic> args) capture_and_compose<TResult>(Funf<TResult> f, params dynamic[] args) => capture_and_compose(f, args.AsEnumerable());
+        private static (Funf<TResult>, IEnumerable<dynamic> args) capture_and_compose<TResult>(Funf<TResult> f, IEnumerable<dynamic> args) =>
             args.SkipWhile(arg => !(arg is Funf)) switch
             {
-                var empty when !empty.Any() => (g, args),
-                var f_and_args => (compose(capture(f_and_args.First(), f_and_args.Skip(1)), g), args.TakeWhile(arg => !(arg is Funf))),
+                var empty when !empty.Any() => (f, args),
+                var g_and_args => (compose(f, capture(g_and_args.First(), g_and_args.Skip(1))), args.TakeWhile(arg => !(arg is Funf))),
             };
     }
 }

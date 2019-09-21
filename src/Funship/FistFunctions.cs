@@ -75,9 +75,9 @@ namespace Funship
         /// <example>
         /// var mapped = map(fist(1, 2, 3, 4), funf(x => 2 * x)); // mapped = fist(2, 4, 6, 8)
         /// </example>
-        public static Fist map<T>(Fist<T> list, Funf fun) => fun switch
+        public static Fist map<TSource, TTarget>(Fist<TSource> list, Funf<TTarget> fun) => fun switch
         {
-            WFunf f => fist(list.Select(x => f.Func(x))),
+            WFunf<TTarget> f => fist(list.Select(x => f.Func(x))),
             _ => fist(list.Select(x => call(fun, x))),
         };
 
@@ -105,9 +105,9 @@ namespace Funship
         /// <example>
         /// var val = reduce(fist(1, 2, 3, 4), funf((el, acc) => el + acc)); // val = 10
         /// </example>
-        public static dynamic reduce<T>(Fist<T> list, Funf fun) => fun switch
+        public static dynamic reduce<TSource, TTarget>(Fist<TSource> list, Funf<TTarget> fun) => fun switch
         {
-            WFunf f => Enumerable.Aggregate(list.Cast<dynamic>(), f.Func),
+            WFunf<TTarget> f => Enumerable.Aggregate(list.Cast<dynamic>(), f.Func),
             _ => list.Cast<dynamic>().Aggregate((acc, x) => call(fun, acc, x)),
         };
 
@@ -133,9 +133,9 @@ namespace Funship
         /// <example>
         /// var val = reduce(fist(1, 2, 3, 4), true, funf((el, acc) => acc &amp;&amp; (el &lt; 5))); // val = true
         /// </example>
-        public static dynamic reduce<T>(Fist<T> list, dynamic acc, Funf fun) => fun switch
+        public static dynamic reduce<TSource, TTarget>(Fist<TSource> list, dynamic acc, Funf<TTarget> fun) => fun switch
         {
-            WFunf f => Enumerable.Aggregate(list.Cast<dynamic>(), acc, f.Func),
+            WFunf<TTarget> f => Enumerable.Aggregate(list.Cast<dynamic>(), acc, f.Func),
             _ => Enumerable.Aggregate(list.Cast<dynamic>(), acc, (Func<dynamic, dynamic, dynamic>)((acc, x) => call(fun, acc, x))),
         };
 
@@ -151,13 +151,18 @@ namespace Funship
         ///             funf(x => x > 5))
         /// // list will be fist(6, 5, 4, 3, 2, 1)
         /// </example>
-        public static Fist<T> drop_until<T>(Fist<T> list, Funf predicate) => list switch
+        public static Fist<T> drop_until<T>(Fist<T> list, Funf<bool> predicate) => list switch
         {
             Nilf _ => Fist<T>.nilf,
             _ => predicate switch
             {
-                WFunf f => fist(list.SkipWhile(x => !f.Func(x))),
-                _ => fist(list.SkipWhile(x => !call(predicate, x))),
+                WFunf<bool> f => fist(list.SkipWhile(x => !f.Func(x))),
+                _ => fist(list.SkipWhile(x =>
+                    call(predicate, x) switch
+                    {
+                        (CallResultType.Full, false, _) => true,
+                        _ => false,
+                    })),
             },
         };
 
@@ -173,11 +178,19 @@ namespace Funship
         ///             funf(x => x &lt;= 5));
         /// // list will be fist(6, 5, 4, 3, 2, 1)
         /// </example>
-        public static Fist<T> drop_while<T>(Fist<T> list, Funf predicate) => list switch
+        public static Fist<T> drop_while<T>(Fist<T> list, Funf<bool> predicate) => list switch
         {
             Nilf _ => Fist<T>.nilf,
-            Fist<T> _ when !call(predicate, list.head) => list,
-            (var _, Fist<T> tail) => drop_while(tail, predicate),
+            _ => predicate switch
+            {
+                WFunf<bool> f => fist(list.SkipWhile(x => !f.Func(x))),
+                _ => fist(list.SkipWhile(x =>
+                    call(predicate, x) switch
+                    {
+                        (CallResultType.Full, true, _) => true,
+                        _ => false,
+                    })),
+            },
         };
 
         /// <summary>
@@ -190,10 +203,15 @@ namespace Funship
         /// var list = filter(fist(1, 2, 3, 4, 5, 6, 5, 4, 3, 2, 1), funf(x => x > 5));
         /// // list will be fist(6)
         /// </example>
-        public static Fist<T> filter<T>(Fist<T> list, Funf predicate) => predicate switch
+        public static Fist<T> filter<T>(Fist<T> list, Funf<bool> predicate) => predicate switch
         {
-            WFunf f => fist(list.Where(x => f.Func(x))),
-            _ => fist(list.Where(x => call(predicate, x))),
+            WFunf<bool> f => fist(list.Where(x => f.Func(x))),
+            _ => fist(list.Where(x =>
+                call(predicate, x) switch
+                {
+                    (CallResultType.Full, true, _) => true,
+                    _ => false,
+                })),
         };
 
         /// <summary>
@@ -206,10 +224,15 @@ namespace Funship
         /// var list = filter(fist(1, 2, 3, 4, 5, 6, 5, 4, 3, 2, 1), funf(x => x &lt;= 5));
         /// // list will be fist(6)
         /// </example>
-        public static dynamic reject<T>(Fist<T> list, Funf predicate) => predicate switch
+        public static dynamic reject<T>(Fist<T> list, Funf<bool> predicate) => predicate switch
         {
-            WFunf f => fist(list.Where(x => !f.Func(x))),
-            _ => fist(list.Where(x => !call(predicate, x))),
+            WFunf<bool> f => fist(list.Where(x => !f.Func(x))),
+            _ => fist(list.Where(x =>
+                call(predicate, x) switch
+                {
+                    (CallResultType.Full, false, _) => true,
+                    _ => false,
+                })),
         };
 
 
@@ -345,13 +368,18 @@ namespace Funship
         /// <example>
         /// var val = all(fist(1, 2, 3, 4), funf(x => x &lt; 5))     // val = true
         /// </example>
-        public static bool all<T>(Fist<T> list, Funf predicate) => list switch
+        public static bool all<T>(Fist<T> list, Funf<bool> predicate) => list switch
         {
             Nilf _ => true,
             _ => predicate switch
             {
-                WFunf f => list.All(x => f.Func(x)),
-                _ => list.All(x => call(predicate, x)),
+                WFunf<bool> f => list.All(x => f.Func(x)),
+                _ => list.All(x =>
+                    call(predicate, x) switch
+                    {
+                        (CallResultType.Full, true, _) => true,
+                        _ => false,
+                    }),
             },
         };
         public static bool all(Fist list, Funf predicate) => all(fist(list.Cast<dynamic>()), predicate);
@@ -371,13 +399,22 @@ namespace Funship
         /// <example>
         /// var val = any(fist(1, 2, 3, 4), funf(x => x &gt; 5))     // val = false
         /// </example>
-        public static bool any<T>(Fist<T> list, Funf predicate) => list switch
+        public static bool any<T>(Fist<T> list, Funf<bool> predicate) => list switch
         {
             Nilf _ => false,
             _ => predicate switch
             {
-                WFunf f => list.Any(x => f.Func(x)),
-                _ => list.Any(x => call(predicate, x)),
+                WFunf<bool> f => list.Any(x => f.Func(x)),
+                _ => predicate switch
+                {
+                    WFunf<bool> f => list.All(x => f.Func(x)),
+                    _ => list.Any(x =>
+                        call(predicate, x) switch
+                        {
+                            (CallResultType.Full, true, _) => true,
+                            _ => false,
+                        }),
+                },
             },
         };
         public static bool any(Fist list, Funf predicate) => any(fist(list.Cast<dynamic>()), predicate);
