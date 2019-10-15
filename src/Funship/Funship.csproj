@@ -13,7 +13,7 @@
     It also deconstructs to a ValueTuple such that C# 8 switch statements
     can pattern match using (var head, Fist tail).
     
-    Create a functional function using var f = funf((x, y) => x + y) and then call it using
+    Create a functional function using var f = funf((x, y) =&gt; x + y) and then call it using
     call(f, 1, 2), which would be 3 in this case. You can also compose multiple functions
     in a call like call(f, 1, f, 2, 3), which would first call the rightmost f with 2 and 3
     to get 5 and then would send 1 and the resulting 5 to the first f to get 6.
@@ -28,6 +28,7 @@
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
     <PackageTags>funship functional-programming fp functional-list head-tail-list curry partially-call-function</PackageTags>
     <Version>1.0.0.0-alpha-2</Version>
+    <PackageIconUrl>https://github.com/rileywhite/Funship/raw/master/Icons/Funship_0128px.png</PackageIconUrl>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DocumentationFile>bin\Debug\netcoreapp3.0\Funship.xml</DocumentationFile>
