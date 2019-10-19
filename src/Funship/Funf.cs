@@ -65,6 +65,13 @@ namespace Funship
         /// </remarks>
         int arity { get; }
 
+        /// <summary>
+        /// Gets the underlying <see cref="Delegate"/>
+        /// </summary>
+        Delegate func { get; }
+
+        IEnumerable<dynamic> overflow_args { get; }
+
         public enum CallResultType
         {
             Error,
@@ -130,7 +137,7 @@ namespace Funship
         private static CallResult<TResult> full_call_result<TResult>(TResult result) =>
             new FullCallResult<TResult>(result);
 
-        public static Funf<T> empty<T>() => new WFunf<T>(() => default);
+        public static Funf<T> empty<T>() => WFunf<T>.create(() => default);
 
         #region Factories
 
@@ -144,7 +151,7 @@ namespace Funship
         /// var f = Funf(() => 0);
         /// var x = call(f);        // x = 0
         /// </example>
-        public static Funf<TResult> funf<TResult>(Func<TResult> func) => new WFunf<TResult>(func);
+        public static Funf<TResult> funf<TResult>(Func<TResult> func) => WFunf<TResult>.create(func);
 
         /// <summary>
         /// Creates a new <see cref="Funf"/> from a given
@@ -156,7 +163,7 @@ namespace Funship
         /// var f = Funf((arg) => arg);
         /// var x = call(f, 1);        // x = 1
         /// </example>
-        public static Funf<TResult> funf<TResult>(Func<dynamic, TResult> func) => new WFunf<TResult>(func);
+        public static Funf<TResult> funf<T, TResult>(Func<T, TResult> func) => WFunf<TResult>.create(func);
 
         /// <summary>
         /// Creates a new <see cref="Funf"/> from a given
@@ -168,7 +175,7 @@ namespace Funship
         /// var f = Funf((a1, a2) => a1 + a2);
         /// var x = call(f, 1, 1);        // x = 2
         /// </example>
-        public static Funf<TResult> funf<TResult>(Func<dynamic, dynamic, TResult> func) => new WFunf<TResult>(func);
+        public static Funf<TResult> funf<T1, T2, TResult>(Func<T1, T2, TResult> func) => WFunf<TResult>.create(func);
 
         /// <summary>
         /// Creates a new <see cref="Funf"/> from a given
@@ -180,7 +187,7 @@ namespace Funship
         /// var f = Funf((a1, a2, a3) => a1 + a2 + a3);
         /// var x = call(f, 1, 1, 1);        // x = 3
         /// </example>
-        public static Funf<TResult> funf<TResult>(Func<dynamic, dynamic, dynamic, TResult> func) => new WFunf<TResult>(func);
+        public static Funf<TResult> funf<T1, T2, T3, TResult>(Func<T1, T2, T3, TResult> func) => WFunf<TResult>.create(func);
 
         /// <summary>
         /// Creates a new <see cref="Funf"/> from a given
@@ -192,7 +199,7 @@ namespace Funship
         /// var f = Funf((a1, a2, a3, a4) => a1 + a2 + a3 + a4);
         /// var x = call(f, 1, 1, 1, 1);        // x = 4
         /// </example>
-        public static Funf<TResult> funf<TResult>(Func<dynamic, dynamic, dynamic, dynamic, TResult> func) => new WFunf<TResult>(func);
+        public static Funf<TResult> funf<T1, T2, T3, T4, TResult>(Func<T1, T2, T3, T4, TResult> func) => WFunf<TResult>.create(func);
 
         /// <summary>
         /// Creates a new <see cref="Funf"/> from a given
@@ -204,7 +211,7 @@ namespace Funship
         /// var f = Funf((a1, a2, a3, a4, a5) => a1 + a2 + a3 + a4 + a5);
         /// var x = call(f, 1, 1, 1, 1, 1);        // x = 5
         /// </example>
-        public static Funf<TResult> funf<TResult>(Func<dynamic, dynamic, dynamic, dynamic, dynamic, TResult> func) => new WFunf<TResult>(func);
+        public static Funf<TResult> funf<T1, T2, T3, T4, T5, TResult>(Func<T1, T2, T3, T4, T5, TResult> func) => WFunf<TResult>.create(func);
 
         /// <summary>
         /// Creates a new <see cref="Funf"/> from a given
@@ -216,7 +223,7 @@ namespace Funship
         /// var f = Funf((a1, a2, a3, a4, a5, a6) => a1 + a2 + a3 + a4 + a5 + a6);
         /// var x = call(f, 1, 1, 1, 1, 1, 1);        // x = 6
         /// </example>
-        public static Funf<TResult> funf<TResult>(Func<dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, TResult> func) => new WFunf<TResult>(func);
+        public static Funf<TResult> funf<T1, T2, T3, T4, T5, T6, TResult>(Func<T1, T2, T3, T4, T5, T6, TResult> func) => WFunf<TResult>.create(func);
 
         /// <summary>
         /// Creates a new <see cref="Funf"/> from a given
@@ -228,7 +235,7 @@ namespace Funship
         /// var f = Funf((a1, a2, a3, a4, a5, a6, a7) => a1 + a2 + a3 + a4 + a5 + a6 + a7);
         /// var x = call(f, 1, 1, 1, 1, 1, 1, 1);        // x = 7
         /// </example>
-        public static Funf<TResult> funf<TResult>(Func<dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, TResult> func) => new WFunf<TResult>(func);
+        public static Funf<TResult> funf<T1, T2, T3, T4, T5, T6, T7, TResult>(Func<T1, T2, T3, T4, T5, T6, T7, TResult> func) => WFunf<TResult>.create(func);
 
         /// <summary>
         /// Creates a new <see cref="Funf"/> from a given
@@ -240,7 +247,7 @@ namespace Funship
         /// var f = Funf((a1, a2, a3, a4, a5, a6, a7, a8) => a1 + a2 + a3 + a4 + a5 + a6 + a7 + a8);
         /// var x = call(f, 1, 1, 1, 1, 1, 1, 1, 1);        // x = 8
         /// </example>
-        public static Funf<TResult> funf<TResult>(Func<dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, TResult> func) => new WFunf<TResult>(func);
+        public static Funf<TResult> funf<T1, T2, T3, T4, T5, T6, T7, T8, TResult>(Func<T1, T2, T3, T4, T5, T6, T7, T8, TResult> func) => WFunf<TResult>.create(func);
 
         /// <summary>
         /// Creates a new <see cref="Funf"/> from a given
@@ -252,7 +259,7 @@ namespace Funship
         /// var f = Funf((a1, a2, a3, a4, a5, a6, a7, a8, a9) => a1 + a2 + a3 + a4 + a5 + a6 + a7 + a8 + a9);
         /// var x = call(f, 1, 1, 1, 1, 1, 1, 1, 1, 1);        // x = 9
         /// </example>
-        public static Funf<TResult> funf<TResult>(Func<dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, TResult> func) => new WFunf<TResult>(func);
+        public static Funf<TResult> funf<T1, T2, T3, T4, T5, T6, T7, T8, T9, TResult>(Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, TResult> func) => WFunf<TResult>.create(func);
 
         /// <summary>
         /// Creates a new <see cref="Funf"/> from a given
@@ -264,7 +271,7 @@ namespace Funship
         /// var f = Funf((a1, a2, a3, a4, a5, a6, a7, a8, a9, a10) => a1 + a2 + a3 + a4 + a5 + a6 + a7 + a8 + a9 + a10);
         /// var x = call(f, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1);        // x = 10
         /// </example>
-        public static Funf<TResult> funf<TResult>(Func<dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, TResult> func) => new WFunf<TResult>(func);
+        public static Funf<TResult> funf<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, TResult>(Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, TResult> func) => WFunf<TResult>.create(func);
 
         /// <summary>
         /// Creates a new <see cref="Funf"/> from a given
@@ -276,7 +283,7 @@ namespace Funship
         /// var f = Funf((a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11) => a1 + a2 + a3 + a4 + a5 + a6 + a7 + a8 + a9 + a10 + a11);
         /// var x = call(f, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1);        // x = 11
         /// </example>
-        public static Funf<TResult> funf<TResult>(Func<dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, TResult> func) => new WFunf<TResult>(func);
+        public static Funf<TResult> funf<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, TResult>(Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, TResult> func) => WFunf<TResult>.create(func);
 
         /// <summary>
         /// Creates a new <see cref="Funf"/> from a given
@@ -288,7 +295,7 @@ namespace Funship
         /// var f = Funf((a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12) => a1 + a2 + a3 + a4 + a5 + a6 + a7 + a8 + a9 + a10 + a11 + a12);
         /// var x = call(f, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1);        // x = 12
         /// </example>
-        public static Funf<TResult> funf<TResult>(Func<dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, TResult> func) => new WFunf<TResult>(func);
+        public static Funf<TResult> funf<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, TResult>(Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, TResult> func) => WFunf<TResult>.create(func);
 
         /// <summary>
         /// Creates a new <see cref="Funf"/> from a given
@@ -300,7 +307,7 @@ namespace Funship
         /// var f = Funf((a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13) => a1 + a2 + a3 + a4 + a5 + a6 + a7 + a8 + a9 + a10 + a11 + a12 + a13);
         /// var x = call(f, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1);        // x = 13
         /// </example>
-        public static Funf<TResult> funf<TResult>(Func<dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, TResult> func) => new WFunf<TResult>(func);
+        public static Funf<TResult> funf<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, TResult>(Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, TResult> func) => WFunf<TResult>.create(func);
 
         /// <summary>
         /// Creates a new <see cref="Funf"/> from a given
@@ -312,7 +319,7 @@ namespace Funship
         /// var f = Funf((a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14) => a1 + a2 + a3 + a4 + a5 + a6 + a7 + a8 + a9 + a10 + a11 + a12 + a13 + a14);
         /// var x = call(f, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1);        // x = 14
         /// </example>
-        public static Funf<TResult> funf<TResult>(Func<dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, TResult> func) => new WFunf<TResult>(func);
+        public static Funf<TResult> funf<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, TResult>(Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, TResult> func) => WFunf<TResult>.create(func);
 
         /// <summary>
         /// Creates a new <see cref="Funf"/> from a given
@@ -324,7 +331,7 @@ namespace Funship
         /// var f = Funf((a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15) => a1 + a2 + a3 + a4 + a5 + a6 + a7 + a8 + a9 + a10 + a11 + a12 + a13 + a14 + a15);
         /// var x = call(f, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1);        // x = 15
         /// </example>
-        public static Funf<TResult> funf<TResult>(Func<dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, TResult> func) => new WFunf<TResult>(func);
+        public static Funf<TResult> funf<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, TResult>(Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, TResult> func) => WFunf<TResult>.create(func);
 
         /// <summary>
         /// Creates a new <see cref="Funf"/> from a given
@@ -336,187 +343,93 @@ namespace Funship
         /// var f = Funf((a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16) => a1 + a2 + a3 + a4 + a5 + a6 + a7 + a8 + a9 + a10 + a11 + a12 + a13 + a14 + a15 + a16);
         /// var x = call(f, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1);        // x = 16
         /// </example>
-        public static Funf<TResult> funf<TResult>(Func<dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, TResult> func) => new WFunf<TResult>(func);
+        public static Funf<TResult> funf<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, TResult>(Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, TResult> func) => WFunf<TResult>.create(func);
 
         #endregion
 
         /// <summary>
-        /// Simple wrapped dotnet function
+        /// Wrapped function delegate with optional overflow args
         /// </summary>
         internal readonly struct WFunf<TResult> : Funf<TResult>
         {
             #region Constructors
 
-            public WFunf(Func<TResult> func)
+            public static WFunf<TResult> create(Func<TResult> func, params dynamic[] overflow_args) => create(func, overflow_args.AsEnumerable());
+            public static WFunf<TResult> create(Func<TResult> func, IEnumerable<dynamic> overflow_args) => new WFunf<TResult>(func, 0, overflow_args);
+            public static WFunf<TResult> create<T>(Func<T, TResult> func) => new WFunf<TResult>(func, 1);
+            public static WFunf<TResult> create<T1, T2>(Func<T1, T2, TResult> func) => new WFunf<TResult>(func, 2);
+            public static WFunf<TResult> create<T1, T2, T3>(Func<T1, T2, T3, TResult> func) => new WFunf<TResult>(func, 3);
+            public static WFunf<TResult> create<T1, T2, T3, T4>(Func<T1, T2, T3, T4, TResult> func) => new WFunf<TResult>(func, 4);
+            public static WFunf<TResult> create<T1, T2, T3, T4, T5>(Func<T1, T2, T3, T4, T5, TResult> func) => new WFunf<TResult>(func, 5);
+            public static WFunf<TResult> create<T1, T2, T3, T4, T5, T6>(Func<T1, T2, T3, T4, T5, T6, TResult> func) => new WFunf<TResult>(func, 6);
+            public static WFunf<TResult> create<T1, T2, T3, T4, T5, T6, T7>(Func<T1, T2, T3, T4, T5, T6, T7, TResult> func) => new WFunf<TResult>(func, 7);
+            public static WFunf<TResult> create<T1, T2, T3, T4, T5, T6, T7, T8>(Func<T1, T2, T3, T4, T5, T6, T7, T8, TResult> func) => new WFunf<TResult>(func, 8);
+            public static WFunf<TResult> create<T1, T2, T3, T4, T5, T6, T7, T8, T9>(Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, TResult> func) => new WFunf<TResult>(func, 9);
+            public static WFunf<TResult> create<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10>(Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, TResult> func) => new WFunf<TResult>(func, 10);
+            public static WFunf<TResult> create<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11>(Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, TResult> func) => new WFunf<TResult>(func, 11);
+            public static WFunf<TResult> create<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12>(Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, TResult> func) => new WFunf<TResult>(func, 12);
+            public static WFunf<TResult> create<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13>(Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, TResult> func) => new WFunf<TResult>(func, 13);
+            public static WFunf<TResult> create<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14>(Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, TResult> func) => new WFunf<TResult>(func, 14);
+            public static WFunf<TResult> create<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15>(Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, TResult> func) => new WFunf<TResult>(func, 15);
+            public static WFunf<TResult> create<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16>(Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, TResult> func) => new WFunf<TResult>(func, 16);
+
+            public WFunf(Delegate func, int arity) : this(func, arity, Enumerable.Empty<dynamic>()) { }
+            public WFunf(Delegate func, int arity, IEnumerable<dynamic> captured_args)
             {
-                this.Func = func;
-                this.arity = 0;
+                this.dynamic_info = new Lazy<(Delegate, int, IEnumerable<dynamic> overflow_args)>(() =>
+                {
+                    var (args, new_arity) = arity > 0 ? extract_args_and_arity(captured_args, arity) : (new object[0], arity);
+
+                    Delegate new_func = new_arity switch
+                    {
+                        0 => (Func<TResult>)(() => (TResult)func.DynamicInvoke(args)),
+                        1 => (Func<dynamic, TResult>)((a1) => (TResult)func.DynamicInvoke(args.Append((object)a1).ToArray())),
+                        2 => (Func<dynamic, dynamic, TResult>)((a1, a2) => (TResult)func.DynamicInvoke(args.Concat(new[] { a1, a2 }).ToArray())),
+                        3 => (Func<dynamic, dynamic, dynamic, TResult>)((a1, a2, a3) => (TResult)func.DynamicInvoke(args.Concat(new[] { a1, a2, a3 }).ToArray())),
+                        4 => (Func<dynamic, dynamic, dynamic, dynamic, TResult>)((a1, a2, a3, a4) => (TResult)func.DynamicInvoke(args.Concat(new[] { a1, a2, a3, a4 }).ToArray())),
+                        5 => (Func<dynamic, dynamic, dynamic, dynamic, dynamic, TResult>)((a1, a2, a3, a4, a5) => (TResult)func.DynamicInvoke(args.Concat(new[] { a1, a2, a3, a4, a5 }).ToArray())),
+                        6 => (Func<dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, TResult>)((a1, a2, a3, a4, a5, a6) => (TResult)func.DynamicInvoke(args.Concat(new[] { a1, a2, a3, a4, a5, a6 }).ToArray())),
+                        7 => (Func<dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, TResult>)((a1, a2, a3, a4, a5, a6, a7) => (TResult)func.DynamicInvoke(args.Concat(new[] { a1, a2, a3, a4, a5, a6, a7 }).ToArray())),
+                        8 => (Func<dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, TResult>)((a1, a2, a3, a4, a5, a6, a7, a8) => (TResult)func.DynamicInvoke(args.Concat(new[] { a1, a2, a3, a4, a5, a6, a7, a8 }).ToArray())),
+                        9 => (Func<dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, TResult>)((a1, a2, a3, a4, a5, a6, a7, a8, a9) => (TResult)func.DynamicInvoke(args.Concat(new[] { a1, a2, a3, a4, a5, a6, a7, a8, a9 }).ToArray())),
+                        10 => (Func<dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, TResult>)((a1, a2, a3, a4, a5, a6, a7, a8, a9, a10) => (TResult)func.DynamicInvoke(args.Concat(new[] { a1, a2, a3, a4, a5, a6, a7, a8, a9, a10 }).ToArray())),
+                        11 => (Func<dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, TResult>)((a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11) => (TResult)func.DynamicInvoke(args.Concat(new[] { a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11 }).ToArray())),
+                        12 => (Func<dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, TResult>)((a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12) => (TResult)func.DynamicInvoke(args.Concat(new[] { a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12 }).ToArray())),
+                        13 => (Func<dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, TResult>)((a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13) => (TResult)func.DynamicInvoke(args.Concat(new[] { a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13 }).ToArray())),
+                        14 => (Func<dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, TResult>)((a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14) => (TResult)func.DynamicInvoke(args.Concat(new[] { a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14 }).ToArray())),
+                        15 => (Func<dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, TResult>)((a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15) => (TResult)func.DynamicInvoke(args.Concat(new[] { a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15 }).ToArray())),
+                        16 => (Func<dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, TResult>)((a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16) => (TResult)func.DynamicInvoke(args.Concat(new[] { a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16 }).ToArray())),
+                        _ => throw new ArgumentException($"Cannot support ${new_arity} arguments in a function. Only up to 16 are supported."),
+                    };
+
+                    return (new_func, new_arity, new_arity <= 0 ? Enumerable.Empty<dynamic>() : captured_args.Skip(arity));
+                });
             }
 
-            public WFunf(Func<dynamic, TResult> func)
+            private static (object[] args, int new_arity) extract_args_and_arity(IEnumerable<dynamic> captured_args, int arity)
             {
-                this.Func = func;
-                this.arity = 1;
-            }
-
-            public WFunf(Func<dynamic, dynamic, TResult> func)
-            {
-                this.Func = func;
-                this.arity = 2;
-            }
-
-            public WFunf(Func<dynamic, dynamic, dynamic, TResult> func)
-            {
-                this.Func = func;
-                this.arity = 3;
-            }
-
-            public WFunf(Func<dynamic, dynamic, dynamic, dynamic, TResult> func)
-            {
-                this.Func = func;
-                this.arity = 4;
-            }
-
-            public WFunf(Func<dynamic, dynamic, dynamic, dynamic, dynamic, TResult> func)
-            {
-                this.Func = func;
-                this.arity = 5;
-            }
-
-            public WFunf(Func<dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, TResult> func)
-            {
-                this.Func = func;
-                this.arity = 6;
-            }
-
-            public WFunf(Func<dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, TResult> func)
-            {
-                this.Func = func;
-                this.arity = 7;
-            }
-
-            public WFunf(Func<dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, TResult> func)
-            {
-                this.Func = func;
-                this.arity = 8;
-            }
-
-            public WFunf(Func<dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, TResult> func)
-            {
-                this.Func = func;
-                this.arity = 9;
-            }
-
-            public WFunf(Func<dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, TResult> func)
-            {
-                this.Func = func;
-                this.arity = 10;
-            }
-
-            public WFunf(Func<dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, TResult> func)
-            {
-                this.Func = func;
-                this.arity = 11;
-            }
-
-            public WFunf(Func<dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, TResult> func)
-            {
-                this.Func = func;
-                this.arity = 12;
-            }
-
-            public WFunf(Func<dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, TResult> func)
-            {
-                this.Func = func;
-                this.arity = 13;
-            }
-
-            public WFunf(Func<dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, TResult> func)
-            {
-                this.Func = func;
-                this.arity = 14;
-            }
-
-            public WFunf(Func<dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, TResult> func)
-            {
-                this.Func = func;
-                this.arity = 15;
-            }
-
-            public WFunf(Func<dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, TResult> func)
-            {
-                this.Func = func;
-                this.arity = 16;
+                var args = captured_args.Take(arity).Cast<object>().ToArray();
+                return (args, arity - args.Length);
             }
 
             #endregion
 
-            public dynamic Func { get; }
+            private Lazy<(Delegate func, int arity, IEnumerable<dynamic> overflow_args)> dynamic_info { get; }
 
-            public int arity { get; }
-            private IEnumerable<dynamic> args => new dynamic[0];
+            public Delegate func => this.dynamic_info.Value.func;
+            public int arity => this.dynamic_info.Value.arity;
+            public IEnumerable<dynamic> overflow_args => this.dynamic_info.Value.overflow_args;
 
-            public CallResult<TResult> invoke_func(IEnumerable<dynamic> args) => invoke_func(args.ToArray());
-            public CallResult<TResult> invoke_func(params dynamic[] args) => args.Length switch
+            public CallResult<TResult> invoke_func(params dynamic[] args) => invoke_func(args.AsEnumerable());
+            public CallResult<TResult> invoke_func(IEnumerable<dynamic> args)
             {
-                int l when l > arity => full_call_result((TResult)this.Func.DynamicInvoke(args.Take(arity).ToArray()), args.Skip(arity)),
-                int l when l == arity => full_call_result((TResult)this.Func.DynamicInvoke(args), new dynamic[0]),
-                _ => partial_call_result(capture(this, args)),
-            };
-        }
+                var all_args = this.overflow_args.Concat(args);
+                var args_to_use = all_args.Take(this.arity).ToArray();
 
-        /// <summary>
-        /// A function that encloses some captured args
-        /// </summary>
-        private readonly struct CapFunf<TResult> : Funf<TResult>
-        {
-            public CapFunf(Funf<TResult> f, IEnumerable<dynamic> args, int arity)
-            {
-                this.f = f;
-                this.args = args;
-                this.arity = arity;
-            }
-
-            private Funf<TResult> f { get; }
-            private IEnumerable<dynamic> args { get; }
-            public int arity { get; }
-
-            public CallResult<TResult> collect_args_and_call(params dynamic[] moreArgs) => this.collect_args_and_call(moreArgs.AsEnumerable());
-            public CallResult<TResult> collect_args_and_call(IEnumerable<dynamic> moreArgs) => call(f, this.args.Concat(moreArgs));
-        }
-
-        /// <summary>
-        /// Composed function that, when executed, will pass its outcome to another function
-        /// </summary>
-        private readonly struct CompFunf<TFResult> : Funf<TFResult>
-        {
-            public CompFunf(Funf<TFResult> f, Funf<dynamic> g, int arity, IEnumerable<dynamic> args)
-            {
-                this.f = f;
-                this.g = g;
-                this.args = args;
-                this.arity = arity;
-            }
-
-            private Funf<TFResult> f { get; }
-            private Funf<dynamic> g { get; }
-            private IEnumerable<dynamic> args { get; }
-            public int arity { get; }
-
-
-            public CallResult<TFResult> collect_args_and_call(params dynamic[] moreArgs) => this.collect_args_and_call(moreArgs.AsEnumerable());
-            public CallResult<TFResult> collect_args_and_call(IEnumerable<dynamic> moreArgs)
-            {
-                var allArgs = this.args.Concat(moreArgs).ToArray();
-                return allArgs.Length switch
-                {
-                    var l when l < g.arity => partial_call_result(new CompFunf<TFResult>(f, g, f.arity + g.arity - l, allArgs)),
-                    _ => call(g, allArgs) switch
-                    {
-                        (CallResultType.Full, var result, var overflow_args) => call(f, Enumerable.Prepend(overflow_args, result)),
-                        (_, Funf closure) => call(f, allArgs.Prepend(closure))
-                    },
-                };
+                return
+                    args_to_use.Length >= this.arity ?
+                    full_call_result((TResult)this.func.DynamicInvoke(args_to_use), all_args.Skip(arity)) :
+                    partial_call_result(capture(this, args));
             }
         }
 

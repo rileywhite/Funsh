@@ -57,7 +57,7 @@ namespace Funship
         /// Calculating a hash code for a <see cref="Fist"/> causes it to be traversed, meaning that any
         /// delayed lazy traversal costs will be incurred at the time of this call.
         /// </remarks>
-        public static int hash_code<T>(Fist<T> list) => reduce(list, 0, funf((acc, x) => 486187739 * acc + (x.GetHashCode())));
+        public static int hash_code<T>(Fist<T> list) => reduce(list, 0, funf((int acc, int x) => 486187739 * acc + (x.GetHashCode())));
 
         /// <summary>
         /// Map a <see cref="Fist"/> using a given <see cref="Funf"/>
@@ -77,8 +77,8 @@ namespace Funship
         /// </example>
         public static Fist map<TSource, TTarget>(Fist<TSource> list, Funf<TTarget> fun) => fun switch
         {
-            WFunf<TTarget> f => fist(list.Select(x => f.Func(x))),
-            _ => fist(list.Select(x => call(fun, x))),
+            WFunf<TTarget> f => fist(list.Select((Func<TSource, TTarget>)f.func)),
+            _ => throw new ArgumentException("Unsupported Funf type", nameof(fun)),
         };
 
         /// <summary>
@@ -105,10 +105,10 @@ namespace Funship
         /// <example>
         /// var val = reduce(fist(1, 2, 3, 4), funf((el, acc) => el + acc)); // val = 10
         /// </example>
-        public static dynamic reduce<TSource, TTarget>(Fist<TSource> list, Funf<TTarget> fun) => fun switch
+        public static dynamic reduce<TResult>(Fist<TResult> list, Funf<TResult> fun) => fun switch
         {
-            WFunf<TTarget> f => Enumerable.Aggregate(list.Cast<dynamic>(), f.Func),
-            _ => list.Cast<dynamic>().Aggregate((acc, x) => call(fun, acc, x)),
+            WFunf<TResult> f => Enumerable.Aggregate(list, (Func<TResult, TResult, TResult>)f.func),
+            _ => throw new ArgumentException("Unsupported Funf type", nameof(fun)),
         };
 
         /// <summary>
@@ -133,10 +133,10 @@ namespace Funship
         /// <example>
         /// var val = reduce(fist(1, 2, 3, 4), true, funf((el, acc) => acc &amp;&amp; (el &lt; 5))); // val = true
         /// </example>
-        public static dynamic reduce<TSource, TTarget>(Fist<TSource> list, dynamic acc, Funf<TTarget> fun) => fun switch
+        public static dynamic reduce<TSource, TTarget>(Fist<TSource> list, TTarget acc, Funf<TTarget> fun) => fun switch
         {
-            WFunf<TTarget> f => Enumerable.Aggregate(list.Cast<dynamic>(), acc, f.Func),
-            _ => Enumerable.Aggregate(list.Cast<dynamic>(), acc, (Func<dynamic, dynamic, dynamic>)((acc, x) => call(fun, acc, x))),
+            WFunf<TTarget> f => Enumerable.Aggregate(list, acc, (Func<TTarget, TSource, TTarget>)f.func),
+            _ => throw new ArgumentException("Unsupported Funf type", nameof(fun)),
         };
 
         /// <summary>
@@ -156,13 +156,8 @@ namespace Funship
             Nilf _ => Fist<T>.nilf,
             _ => predicate switch
             {
-                WFunf<bool> f => fist(list.SkipWhile(x => !f.Func(x))),
-                _ => fist(list.SkipWhile(x =>
-                    call(predicate, x) switch
-                    {
-                        (CallResultType.Full, false, _) => true,
-                        _ => false,
-                    })),
+                WFunf<bool> f => fist(list.SkipWhile(x => !((Func<T, bool>)f.func)(x))),
+                _ => throw new ArgumentException("Unsupported Funf type", nameof(predicate)),
             },
         };
 
@@ -183,13 +178,8 @@ namespace Funship
             Nilf _ => Fist<T>.nilf,
             _ => predicate switch
             {
-                WFunf<bool> f => fist(list.SkipWhile(x => !f.Func(x))),
-                _ => fist(list.SkipWhile(x =>
-                    call(predicate, x) switch
-                    {
-                        (CallResultType.Full, true, _) => true,
-                        _ => false,
-                    })),
+                WFunf<bool> f => fist(list.SkipWhile(x => !((Func<T, bool>)f.func)(x))),
+                _ => throw new ArgumentException("Unsupported Funf type", nameof(predicate)),
             },
         };
 
@@ -205,13 +195,8 @@ namespace Funship
         /// </example>
         public static Fist<T> filter<T>(Fist<T> list, Funf<bool> predicate) => predicate switch
         {
-            WFunf<bool> f => fist(list.Where(x => f.Func(x))),
-            _ => fist(list.Where(x =>
-                call(predicate, x) switch
-                {
-                    (CallResultType.Full, true, _) => true,
-                    _ => false,
-                })),
+            WFunf<bool> f => fist(list.Where((Func<T, bool>)f.func)),
+            _ => throw new ArgumentException("Unsupported Funf type", nameof(predicate)),
         };
 
         /// <summary>
@@ -226,13 +211,8 @@ namespace Funship
         /// </example>
         public static dynamic reject<T>(Fist<T> list, Funf<bool> predicate) => predicate switch
         {
-            WFunf<bool> f => fist(list.Where(x => !f.Func(x))),
-            _ => fist(list.Where(x =>
-                call(predicate, x) switch
-                {
-                    (CallResultType.Full, false, _) => true,
-                    _ => false,
-                })),
+            WFunf<bool> f => fist(list.Where(x => !((Func<T, bool>)f.func)(x))),
+            _ => throw new ArgumentException("Unsupported Funf type", nameof(predicate)),
         };
 
 
@@ -373,13 +353,8 @@ namespace Funship
             Nilf _ => true,
             _ => predicate switch
             {
-                WFunf<bool> f => list.All(x => f.Func(x)),
-                _ => list.All(x =>
-                    call(predicate, x) switch
-                    {
-                        (CallResultType.Full, true, _) => true,
-                        _ => false,
-                    }),
+                WFunf<bool> f => list.All((Func<T, bool>)f.func),
+                _ => throw new ArgumentException("Unsupported Funf type", nameof(predicate)),
             },
         };
         public static bool all(Fist list, Funf predicate) => all(fist(list.Cast<dynamic>()), predicate);
@@ -404,17 +379,8 @@ namespace Funship
             Nilf _ => false,
             _ => predicate switch
             {
-                WFunf<bool> f => list.Any(x => f.Func(x)),
-                _ => predicate switch
-                {
-                    WFunf<bool> f => list.All(x => f.Func(x)),
-                    _ => list.Any(x =>
-                        call(predicate, x) switch
-                        {
-                            (CallResultType.Full, true, _) => true,
-                            _ => false,
-                        }),
-                },
+                WFunf<bool> f => list.Any((Func<T, bool>)f.func),
+                _ => throw new ArgumentException("Unsupported Funf type", nameof(predicate)),
             },
         };
         public static bool any(Fist list, Funf predicate) => any(fist(list.Cast<dynamic>()), predicate);

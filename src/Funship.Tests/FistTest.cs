@@ -32,7 +32,7 @@ namespace Funship.Tests
         {
             var list = fist(2, 4, 6, 8);
             var dynamicList = fist(Enumerable.Range(1, 4));
-            var mappedList = map(fist(1, 2, 3, 4), funf(x => 2 * x));
+            var mappedList = map(fist(1, 2, 3, 4), funf((int x) => 2 * x));
 
             Assert.Equal(fist(2, 4, 6, 8), list);
             Assert.Equal(fist(2, 4, 6, 8).GetHashCode(), list.GetHashCode());
@@ -72,7 +72,7 @@ namespace Funship.Tests
         public void can_reduce_list()
         {
             var list = fist(1, 2, 3, 4);
-            var result = reduce(list, funf((acc, x) => acc * x));
+            var result = reduce(list, funf((int acc, int x) => acc * x));
             Assert.Equal(24, result);
         }
 
@@ -80,7 +80,7 @@ namespace Funship.Tests
         public void can_map_list()
         {
             var list = fist(1, 2, 3, 4);
-            var result = map(fist(1, 2, 3, 4), funf(x => x * 2));
+            var result = map(fist(1, 2, 3, 4), funf((int x) => x * 2));
             Assert.Equal(result, fist(2, 4, 6, 8));
         }
 
@@ -127,44 +127,44 @@ namespace Funship.Tests
         [Fact]
         public void all_works_with_valid_fun()
         {
-            Assert.True(all(nilf, funf(x => x > 5)));
-            Assert.True(all(fist(6, 7, 8, 9), funf(x => x > 5)));
-            Assert.True(all(fist(6), funf(x => x > 5)));
-            Assert.False(all(fist(4, 8, 9), funf(x => x > 5)));
-            Assert.False(all(fist(4), funf(x => x > 5)));
-            Assert.False(all(fist(4, 7, 8, 9), funf(x => x > 5)));
-            Assert.False(all(fist(6, 4, 8, 9), funf(x => x > 5)));
-            Assert.False(all(fist(6, 7, 8, 4), funf(x => x > 5)));
+            Assert.True(all(nilf, funf((int x) => x > 5)));
+            Assert.True(all(fist(6, 7, 8, 9), funf((int x) => x > 5)));
+            Assert.True(all(fist(6), funf((int x) => x > 5)));
+            Assert.False(all(fist(4, 8, 9), funf((int x) => x > 5)));
+            Assert.False(all(fist(4), funf((int x) => x > 5)));
+            Assert.False(all(fist(4, 7, 8, 9), funf((int x) => x > 5)));
+            Assert.False(all(fist(6, 4, 8, 9), funf((int x) => x > 5)));
+            Assert.False(all(fist(6, 7, 8, 4), funf((int x) => x > 5)));
         }
 
         [Fact]
-        public void all_works_on_nilf_with_invalid_fun() => Assert.True(all(nilf, funf(x => 12)));
+        public void all_works_on_nilf_with_invalid_fun() => Assert.True(all(nilf, funf((int x) => 12)));
 
         [Fact]
         public void all_fails_on_nonempty_fist_with_invalid_fun() =>
-            Assert.Throws<RuntimeBinderException>(() => all(fist(1), funf(x => 12)));
+            Assert.Throws<RuntimeBinderException>(() => all(fist(1), funf((int x) => 12)));
 
         [Fact]
         public void any_works_with_valid_fun()
         {
-            Assert.False(any(nilf, funf(x => x > 5)));
+            Assert.False(any(nilf, funf((int x) => x > 5)));
 
-            Assert.False(any(fist(5, 4, 3, 2), funf(x => x > 5)));
-            Assert.False(any(fist(5), funf(x => x > 5)));
+            Assert.False(any(fist(5, 4, 3, 2), funf((int x) => x > 5)));
+            Assert.False(any(fist(5), funf((int x) => x > 5)));
 
-            Assert.True(any(fist(6, 4, 3), funf(x => x > 5)));
-            Assert.True(any(fist(6), funf(x => x > 5)));
-            Assert.True(any(fist(6, 2, 3, 4), funf(x => x > 5)));
-            Assert.True(any(fist(5, 6, 4, 3), funf(x => x > 5)));
-            Assert.True(any(fist(2, 3, 4, 6), funf(x => x > 5)));
+            Assert.True(any(fist(6, 4, 3), funf((int x) => x > 5)));
+            Assert.True(any(fist(6), funf((int x) => x > 5)));
+            Assert.True(any(fist(6, 2, 3, 4), funf((int x) => x > 5)));
+            Assert.True(any(fist(5, 6, 4, 3), funf((int x) => x > 5)));
+            Assert.True(any(fist(2, 3, 4, 6), funf((int x) => x > 5)));
         }
 
         [Fact]
-        public void any_works_on_nilf_with_invalid_fun() => Assert.False(any(nilf, funf(x => 12)));
+        public void any_works_on_nilf_with_invalid_fun() => Assert.False(any(nilf, funf((int x) => 12)));
 
         [Fact]
         public void any_fails_on_nonempty_fist_with_invalid_fun() =>
-            Assert.Throws<RuntimeBinderException>(() => any(fist(1), funf(x => 12)));
+            Assert.Throws<RuntimeBinderException>(() => any(fist(1), funf((int x) => 12)));
 
         [Fact]
         public void reverse_works_as_expected()
@@ -220,19 +220,19 @@ namespace Funship.Tests
         {
             Assert.Equal(
                 fist(2, 3, 4, 5, 6, 7, 8, 9, 10),
-                drop_until(fist(1, 2, 3, 4, 5, 6, 7, 8, 9, 10), funf<bool>(x => x % 2 == 0)));
+                drop_until(fist(1, 2, 3, 4, 5, 6, 7, 8, 9, 10), funf((int x) => x % 2 == 0)));
 
             Assert.Equal(
                 fist(6, 7, 8, 9, 10),
-                drop_until(fist(Enumerable.Range(1, 10)), funf<bool>(x => x > 5)));
+                drop_until(fist(Enumerable.Range(1, 10)), funf((int x) => x > 5)));
 
             Assert.Equal(
                 fist(6, 5, 4, 3, 2, 1),
-                drop_until(fist(1, 2, 3, 4, 5, 6, 5, 4, 3, 2, 1), funf<bool>(x => x > 5)));
+                drop_until(fist(1, 2, 3, 4, 5, 6, 5, 4, 3, 2, 1), funf((int x) => x > 5)));
 
             Assert.Equal(
                 nilf,
-                drop_until(fist(1, 2, 3, 4, 5, 5, 4, 3, 2, 1), funf<bool>(x => x > 5)));
+                drop_until(fist(1, 2, 3, 4, 5, 5, 4, 3, 2, 1), funf((int x) => x > 5)));
         }
 
         [Fact]
@@ -240,19 +240,19 @@ namespace Funship.Tests
         {
             Assert.Equal(
                 fist(3, 4, 5, 6, 7, 8, 9, 10),
-                drop_while(fist(2, 3, 4, 5, 6, 7, 8, 9, 10), funf<bool>(x => x % 2 == 0)));
+                drop_while(fist(2, 3, 4, 5, 6, 7, 8, 9, 10), funf((int x) => x % 2 == 0)));
 
             Assert.Equal(
                 fist(6, 7, 8, 9, 10),
-                drop_while(fist(Enumerable.Range(1, 10)), funf<bool>(x => x <= 5)));
+                drop_while(fist(Enumerable.Range(1, 10)), funf((int x) => x <= 5)));
 
             Assert.Equal(
                 fist(6, 5, 4, 3, 2, 1),
-                drop_while(fist(1, 2, 3, 4, 5, 6, 5, 4, 3, 2, 1), funf<bool>(x => x <= 5)));
+                drop_while(fist(1, 2, 3, 4, 5, 6, 5, 4, 3, 2, 1), funf((int x) => x <= 5)));
 
             Assert.Equal(
                 nilf,
-                drop_while(fist(1, 2, 3, 4, 5, 5, 4, 3, 2, 1), funf<bool>(x => x <= 5)));
+                drop_while(fist(1, 2, 3, 4, 5, 5, 4, 3, 2, 1), funf((int x) => x <= 5)));
         }
 
         [Fact]
@@ -260,19 +260,19 @@ namespace Funship.Tests
         {
             Assert.Equal(
                 fist(2, 4, 6, 8, 10),
-                filter(fist(1, 2, 3, 4, 5, 6, 7, 8, 9, 10), funf<bool>(x => x % 2 == 0)));
+                filter(fist(1, 2, 3, 4, 5, 6, 7, 8, 9, 10), funf((int x) => x % 2 == 0)));
 
             Assert.Equal(
                 fist(6, 7, 8, 9, 10),
-                filter(fist(Enumerable.Range(1, 10)), funf<bool>(x => x > 5)));
+                filter(fist(Enumerable.Range(1, 10)), funf((int x) => x > 5)));
 
             Assert.Equal(
                 fist(6),
-                filter(fist(1, 2, 3, 4, 5, 6, 5, 4, 3, 2, 1), funf<bool>(x => x > 5)));
+                filter(fist(1, 2, 3, 4, 5, 6, 5, 4, 3, 2, 1), funf((int x) => x > 5)));
 
             Assert.Equal(
                 nilf,
-                filter(fist(1, 2, 3, 4, 5, 5, 4, 3, 2, 1), funf<bool>(x => x > 5)));
+                filter(fist(1, 2, 3, 4, 5, 5, 4, 3, 2, 1), funf((int x) => x > 5)));
         }
 
         [Fact]
@@ -280,19 +280,19 @@ namespace Funship.Tests
         {
             Assert.Equal(
                 fist(1, 3, 5, 7, 9),
-                reject(fist(1, 2, 3, 4, 5, 6, 7, 8, 9, 10), funf<bool>(x => x % 2 == 0)));
+                reject(fist(1, 2, 3, 4, 5, 6, 7, 8, 9, 10), funf((int x) => x % 2 == 0)));
 
             Assert.Equal(
                 fist(6, 7, 8, 9, 10),
-                reject(fist(Enumerable.Range(1, 10)), funf<bool>(x => x <= 5)));
+                reject(fist(Enumerable.Range(1, 10)), funf((int x) => x <= 5)));
 
             Assert.Equal(
                 fist(6),
-                reject(fist(1, 2, 3, 4, 5, 6, 5, 4, 3, 2, 1), funf<bool>(x => x <= 5)));
+                reject(fist(1, 2, 3, 4, 5, 6, 5, 4, 3, 2, 1), funf((int x) => x <= 5)));
 
             Assert.Equal(
                 nilf,
-                reject(fist(1, 2, 3, 4, 5, 5, 4, 3, 2, 1), funf<bool>(x => x <= 5)));
+                reject(fist(1, 2, 3, 4, 5, 5, 4, 3, 2, 1), funf((int x) => x <= 5)));
         }
     }
 }

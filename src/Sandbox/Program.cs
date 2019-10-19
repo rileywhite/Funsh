@@ -31,7 +31,7 @@ namespace Sandbox
         static void Main(string[] _)
         {
             var list = fist(Enumerable.Range(1, 1_000));
-            var reducerFunf = funf((x, acc) => x + acc);
+            var reducerFunf = funf<int, int, int>((x, acc) => x + acc);
 
             Console.WriteLine("Starting Linq Sum...");
             var startLinq = DateTimeOffset.Now;

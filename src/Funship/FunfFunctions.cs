@@ -48,8 +48,124 @@ namespace Funship
         /// var i = compose(h, f);      // i(x) -> f(h(x)) -> f(g(f(x)))
         /// var y = call(i, 10);        // y = 14
         /// </example>
-        public static Funf<TFResult> compose<TFResult>(Funf<TFResult> f, Funf<dynamic> g) =>
-            new CompFunf<TFResult>(f, g, g.arity + f.arity - 1, Enumerable.Empty<dynamic>());
+        public static Funf<TFResult> compose<TFResult, TGResult>(Funf<TFResult> f, Funf<TGResult> g)
+        {
+            return (f.arity, f.overflow_args.Any(), g.arity, g.overflow_args.Any()) switch
+            {
+                (1, false, var b, false) when b >= 0 /* when condition should always be true here */ => b switch
+                {
+                    0 => WFunf<TFResult>.create(compose_func_0<TFResult>(f.func, g.func)),
+                    1 => WFunf<TFResult>.create(compose_func_1<TFResult>(f.func, g.func)),
+                    2 => WFunf<TFResult>.create(compose_func_2<TFResult>(f.func, g.func)),
+                    3 => WFunf<TFResult>.create(compose_func_3<TFResult>(f.func, g.func)),
+                    4 => WFunf<TFResult>.create(compose_func_4<TFResult>(f.func, g.func)),
+                    5 => WFunf<TFResult>.create(compose_func_5<TFResult>(f.func, g.func)),
+                    6 => WFunf<TFResult>.create(compose_func_6<TFResult>(f.func, g.func)),
+                    7 => WFunf<TFResult>.create(compose_func_7<TFResult>(f.func, g.func)),
+                    8 => WFunf<TFResult>.create(compose_func_8<TFResult>(f.func, g.func)),
+                    9 => WFunf<TFResult>.create(compose_func_9<TFResult>(f.func, g.func)),
+                    10 => WFunf<TFResult>.create(compose_func_10<TFResult>(f.func, g.func)),
+                    11 => WFunf<TFResult>.create(compose_func_11<TFResult>(f.func, g.func)),
+                    12 => WFunf<TFResult>.create(compose_func_12<TFResult>(f.func, g.func)),
+                    13 => WFunf<TFResult>.create(compose_func_13<TFResult>(f.func, g.func)),
+                    14 => WFunf<TFResult>.create(compose_func_14<TFResult>(f.func, g.func)),
+                    15 => WFunf<TFResult>.create(compose_func_15<TFResult>(f.func, g.func)),
+                    16 => WFunf<TFResult>.create(compose_func_16<TFResult>(f.func, g.func)),
+                    _ => throw new NotSupportedException($"Cannot create a composed function with {b} arguments"),
+                },
+                //(var a, _, 0, _) => throw new NotImplementedException($"({f.arity}, {f.overflow_args.Any()}, {g.arity}, {g.overflow_args.Any()})"), // a > 0
+                //(0, _, var b, _) => throw new NotImplementedException($"({f.arity}, {f.overflow_args.Any()}, {g.arity}, {g.overflow_args.Any()})"), // b > 0
+                //(var a, false, var b, false) => (a + b - 1) switch // a > 0 && b > 0, so a + b - 1 >= 1
+                //{
+                //    _ => throw new NotImplementedException(),
+                //},
+                _ => throw new NotSupportedException(
+                    $"Unexpected combination of arities and overflows: ({f.arity}, {f.overflow_args.Any()}, {g.arity}, {g.overflow_args.Any()})"),
+            };
+            //var arity = f.arity + g.arity - 1;
+
+            //return arity switch
+            //{
+            //    0 => new WFunf(compose_func_0(f, g), arity, arity >= 0 ? Enumerable.Empty<dynamic>() : ),
+            //    1 => funf(compose_func_1(f, g)),
+            //    2 => funf(compose_func_2<TFResult>(f.func, g.func)),
+            //    3 => funf(compose_func_3<TFResult>(f.func, g.func)),
+            //    4 => funf(compose_func_4<TFResult>(f.func, g.func)),
+            //    5 => funf(compose_func_5<TFResult>(f.func, g.func)),
+            //    6 => funf(compose_func_6<TFResult>(f.func, g.func)),
+            //    7 => funf(compose_func_7<TFResult>(f.func, g.func)),
+            //    8 => funf(compose_func_8<TFResult>(f.func, g.func)),
+            //    9 => funf(compose_func_9<TFResult>(f.func, g.func)),
+            //    10 => funf(compose_func_10<TFResult>(f.func, g.func)),
+            //    11 => funf(compose_func_11<TFResult>(f.func, g.func)),
+            //    12 => funf(compose_func_12<TFResult>(f.func, g.func)),
+            //    13 => funf(compose_func_13<TFResult>(f.func, g.func)),
+            //    14 => funf(compose_func_14<TFResult>(f.func, g.func)),
+            //    15 => funf(compose_func_15<TFResult>(f.func, g.func)),
+            //    16 => funf(compose_func_16<TFResult>(f.func, g.func)),
+            //    var l when l < 0 => funf(compose_func_0<TFResult>(f.func, g.func, g.arity, g.overflow_args)),
+            //};
+        }
+
+        private static Func<TResult> compose_func_0<TResult>(Delegate f, Delegate g) =>
+            () => __composed_func<TResult>(f, g, new object[0]);
+
+        private static Func<dynamic, TResult> compose_func_1<TResult>(Delegate f, Delegate g) =>
+            arg1 => __composed_func<TResult>(f, g, new object[] { arg1 });
+
+        private static Func<dynamic, dynamic, TResult> compose_func_2<TResult>(Delegate f, Delegate g) =>
+            (arg1, arg2) => __composed_func<TResult>(f, g, new object[] { arg1, arg2 });
+
+        private static Func<dynamic, dynamic, dynamic, TResult> compose_func_3<TResult>(Delegate f, Delegate g) =>
+            (arg1, arg2, arg3) => __composed_func<TResult>(f, g, new object[] { arg1, arg2, arg3 });
+
+        private static Func<dynamic, dynamic, dynamic, dynamic, TResult> compose_func_4<TResult>(Delegate f, Delegate g) =>
+            (arg1, arg2, arg3, arg4) => __composed_func<TResult>(f, g, new object[] { arg1, arg2, arg3, arg4 });
+
+        private static Func<dynamic, dynamic, dynamic, dynamic, dynamic, TResult> compose_func_5<TResult>(Delegate f, Delegate g) =>
+            (arg1, arg2, arg3, arg4, arg5) => __composed_func<TResult>(f, g, new object[] { arg1, arg2, arg3, arg4, arg5 });
+
+        private static Func<dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, TResult> compose_func_6<TResult>(Delegate f, Delegate g) =>
+            (arg1, arg2, arg3, arg4, arg5, arg6) => __composed_func<TResult>(f, g, new object[] { arg1, arg2, arg3, arg4, arg5, arg6 });
+
+        private static Func<dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, TResult> compose_func_7<TResult>(Delegate f, Delegate g) =>
+            (arg1, arg2, arg3, arg4, arg5, arg6, arg7) => __composed_func<TResult>(f, g, new object[] { arg1, arg2, arg3, arg4, arg5, arg6, arg7 });
+
+        private static Func<dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, TResult> compose_func_8<TResult>(Delegate f, Delegate g) =>
+            (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8) => __composed_func<TResult>(f, g, new object[] { arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8 });
+
+        private static Func<dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, TResult> compose_func_9<TResult>(Delegate f, Delegate g) =>
+            (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9) => __composed_func<TResult>(f, g, new object[] { arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9 });
+
+        private static Func<dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, TResult> compose_func_10<TResult>(Delegate f, Delegate g) =>
+            (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10) => __composed_func<TResult>(f, g, new object[] { arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10 });
+
+        private static Func<dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, TResult> compose_func_11<TResult>(Delegate f, Delegate g) =>
+            (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11) => __composed_func<TResult>(f, g, new object[] { arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11 });
+
+        private static Func<dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, TResult> compose_func_12<TResult>(Delegate f, Delegate g) =>
+            (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12) => __composed_func<TResult>(f, g, new object[] { arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12 });
+
+        private static Func<dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, TResult> compose_func_13<TResult>(Delegate f, Delegate g) =>
+            (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13) => __composed_func<TResult>(f, g, new object[] { arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13 });
+
+        private static Func<dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, TResult> compose_func_14<TResult>(Delegate f, Delegate g) =>
+            (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14) => __composed_func<TResult>(f, g, new object[] { arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14 });
+
+        private static Func<dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, TResult> compose_func_15<TResult>(Delegate f, Delegate g) =>
+            (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15) => __composed_func<TResult>(f, g, new object[] { arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15 });
+
+        private static Func<dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, dynamic, TResult> compose_func_16<TResult>(Delegate f, Delegate g) =>
+            (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, arg16) => __composed_func<TResult>(f, g, new object[] { arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, arg16 });
+
+        private static TResult __composed_func<TResult>(
+            Delegate f,
+            Delegate g,
+            object[] args)
+        {
+            var g_result = g.DynamicInvoke(args);
+            return (TResult)f.DynamicInvoke(g_result)!;
+        }
 
         /// <summary>
         /// Creates a new <see cref="Funf"/> with passed args enclosed. 
@@ -83,7 +199,8 @@ namespace Funship
         private static Funf<TResult> capture<TResult>(Funf<TResult> f, IEnumerable<dynamic> args) => capture_and_compose(f, args) switch
         {
             (Funf<TResult> fun, var empty) when !empty.Any() => fun,
-            (Funf<TResult> fun, var final_args) => capture(new CapFunf<TResult>(fun, final_args, fun.arity - final_args.Count())),
+            (Funf<TResult> fun, var final_args) => throw new NotImplementedException(),
+            //capture(new CapFunf<TResult>(fun, final_args, fun.arity - final_args.Count())),
         };
 
         /// <summary>
@@ -123,27 +240,10 @@ namespace Funship
         /// var z = call(h, 18, 24, 30) // z = <see cref="IEnumerable{dynamic}"/> of [-13, 24, 30]
         /// </example>
         public static CallResult<TResult> call<TResult>(Funf<TResult> f, params dynamic[] args) => call(f, args.AsEnumerable());
-        //private static CallResult<TResult> call<TResult>(Funf<TResult> f, IEnumerable<dynamic> args) => capture_and_compose(f, args) switch
-        //{
-        //    (WFunf<TResult> fun, var final_args) => fun.invoke_func(final_args),
-        //    (CapFunf<TResult> fun, var final_args) => fun.collect_args_and_call(final_args),
-        //    (CompFunf<TResult> fun, var final_args) => fun.collect_args_and_call(final_args),
-        //    _ => throw new NotSupportedException(),
-        //};
         private static CallResult<TResult> call<TResult>(Funf<TResult> f, IEnumerable<dynamic> args)
         {
-            var fun_and_args = capture_and_compose(f, args);
-            switch (fun_and_args)
-            {
-                case (WFunf<TResult> fun, var final_args): return fun.invoke_func(final_args);
-                case (CapFunf<TResult> fun, var final_args): return fun.collect_args_and_call(final_args);
-
-                case (CompFunf<TResult> fun, var final_args):
-                    var ret = fun.collect_args_and_call(final_args);
-                    return ret;
-
-                default: throw new NotSupportedException();
-            }
+            (var fun, var final_args) = capture_and_compose(f, args);
+            return ((WFunf<TResult>)fun).invoke_func(final_args);
         }
 
         private static (Funf<TResult>, IEnumerable<dynamic> args) capture_and_compose<TResult>(Funf<TResult> f, params dynamic[] args) => capture_and_compose(f, args.AsEnumerable());
