@@ -27,7 +27,7 @@
     <PackageProjectUrl>https://github.com/rileywhite/Funship</PackageProjectUrl>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
     <PackageTags>funship functional-programming fp functional-list head-tail-list curry partially-call-function</PackageTags>
-    <Version>1.0.0.0-alpha-2</Version>
+    <Version>1.0.1-alpha.3</Version>
     <PackageIconUrl>https://github.com/rileywhite/Funship/raw/master/Icons/Funship_0128px.png</PackageIconUrl>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
