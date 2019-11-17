@@ -52,7 +52,7 @@ namespace Funship
         {
             return (f.arity, f.overflow_args.Any(), g.arity, g.overflow_args.Any()) switch
             {
-                (1, false, var b, false) when b >= 0 /* when condition should always be true here */ => b switch
+                (var a, false, var b, false) when a >= 1 && b >= 0 => (a + b - 1) switch
                 {
                     0 => WFunf<TFResult>.create(compose_func_0<TFResult>(f.func, g.func)),
                     1 => WFunf<TFResult>.create(compose_func_1<TFResult>(f.func, g.func)),
@@ -71,7 +71,7 @@ namespace Funship
                     14 => WFunf<TFResult>.create(compose_func_14<TFResult>(f.func, g.func)),
                     15 => WFunf<TFResult>.create(compose_func_15<TFResult>(f.func, g.func)),
                     16 => WFunf<TFResult>.create(compose_func_16<TFResult>(f.func, g.func)),
-                    _ => throw new NotSupportedException($"Cannot create a composed function with {b} arguments"),
+                    _ => throw new NotSupportedException($"Cannot create a composed function with {a + b - 1} arguments"),
                 },
                 //(var a, _, 0, _) => throw new NotImplementedException($"({f.arity}, {f.overflow_args.Any()}, {g.arity}, {g.overflow_args.Any()})"), // a > 0
                 //(0, _, var b, _) => throw new NotImplementedException($"({f.arity}, {f.overflow_args.Any()}, {g.arity}, {g.overflow_args.Any()})"), // b > 0
@@ -198,9 +198,8 @@ namespace Funship
         public static Funf<TResult> capture<TResult>(Funf<TResult> f, params dynamic[] args) => capture(f, fist((IEnumerable<dynamic>)args));
         private static Funf<TResult> capture<TResult>(Funf<TResult> f, IEnumerable<dynamic> args) => capture_and_compose(f, args) switch
         {
-            (Funf<TResult> fun, var empty) when !empty.Any() => fun,
-            (Funf<TResult> fun, var final_args) => throw new NotImplementedException(),
-            //capture(new CapFunf<TResult>(fun, final_args, fun.arity - final_args.Count())),
+            (Funf<TResult> final_f, var empty) when !empty.Any() => final_f,
+            (Funf<TResult> final_f, var final_args) => new WFunf<TResult>(final_f.func, final_f.arity, final_args),
         };
 
         /// <summary>
@@ -240,10 +239,10 @@ namespace Funship
         /// var z = call(h, 18, 24, 30) // z = <see cref="IEnumerable{dynamic}"/> of [-13, 24, 30]
         /// </example>
         public static CallResult<TResult> call<TResult>(Funf<TResult> f, params dynamic[] args) => call(f, args.AsEnumerable());
-        private static CallResult<TResult> call<TResult>(Funf<TResult> f, IEnumerable<dynamic> args)
+        public static CallResult<TResult> call<TResult>(Funf<TResult> f, IEnumerable<dynamic> args)
         {
-            (var fun, var final_args) = capture_and_compose(f, args);
-            return ((WFunf<TResult>)fun).invoke_func(final_args);
+            (var final_f, var final_args) = capture_and_compose(f, args);
+            return ((WFunf<TResult>)final_f).invoke_func(final_args);
         }
 
         private static (Funf<TResult>, IEnumerable<dynamic> args) capture_and_compose<TResult>(Funf<TResult> f, params dynamic[] args) => capture_and_compose(f, args.AsEnumerable());
@@ -251,7 +250,8 @@ namespace Funship
             args.SkipWhile(arg => !(arg is Funf)) switch
             {
                 var empty when !empty.Any() => (f, args),
-                var g_and_args => (compose(f, capture(g_and_args.First(), g_and_args.Skip(1))), args.TakeWhile(arg => !(arg is Funf))),
+                _ => throw new NotImplementedException(),
+                //var g_and_args => (compose(f, capture(g_and_args.First(), g_and_args.Skip(1))), args.TakeWhile(arg => !(arg is Funf))),
             };
     }
 }

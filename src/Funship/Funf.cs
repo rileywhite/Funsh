@@ -429,7 +429,7 @@ namespace Funship
                 return
                     args_to_use.Length >= this.arity ?
                     full_call_result((TResult)this.func.DynamicInvoke(args_to_use), all_args.Skip(arity)) :
-                    partial_call_result(capture(this, args));
+                    partial_call_result(capture(this, all_args));
             }
         }
 

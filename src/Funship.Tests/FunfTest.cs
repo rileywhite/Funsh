@@ -18,6 +18,7 @@ using System;
 using System.Linq;
 using Xunit;
 
+using static Funship.Fist;
 using static Funship.Funf;
 
 namespace Funship.Tests
@@ -148,102 +149,6 @@ namespace Funship.Tests
             Assert.Equal((1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16).GetHashCode(), result16.result);
             Assert.Empty(result16.overflow_args);
         }
-
-        [Fact]
-        public void can_call_with_one_captured_arg()
-        {
-            var f = funf<int, int, int, int>((x, y, z) => x + y - z);
-            var g = capture(f, 2);
-
-            var result = call(g, 3, 18);
-
-            Assert.Equal(2, g.arity);
-            Assert.Equal(CallResultType.Full, result.result_type);
-            Assert.Equal(-13, result.result);
-            Assert.Empty(result.overflow_args);
-        }
-
-        [Fact]
-        public void can_call_with_multiple_captured_arg()
-        {
-            var f = funf<int, int, int, int>((x, y, z) => x + y - z);
-            var g = capture(f, 2, 3);
-
-            var result = call(g, 18);
-
-            Assert.Equal(1, g.arity);
-            Assert.Equal(CallResultType.Full, result.result_type);
-            Assert.Equal(-13, result.result);
-            Assert.Empty(result.overflow_args);
-        }
-
-        [Fact]
-        public void can_call_with_two_separate_captured_arg()
-        {
-            var f = funf<int, int, int, int>((x, y, z) => x + y - z);
-            var g = capture(f, 2);
-            var h = capture(g, 3);
-
-            var fResult = call(f, 5, 4, 18);
-            var gResult = call(g, 4, 18);
-            var hResult = call(h, 18);
-
-            Assert.Equal(3, f.arity);
-            Assert.Equal(CallResultType.Full, fResult.result_type);
-            Assert.Equal(-9, fResult.result);
-            Assert.Empty(fResult.overflow_args);
-
-            Assert.Equal(2, g.arity);
-            Assert.Equal(CallResultType.Full, gResult.result_type);
-            Assert.Equal(-12, gResult.result);
-            Assert.Empty(gResult.overflow_args);
-
-            Assert.Equal(1, h.arity);
-            Assert.Equal(CallResultType.Full, hResult.result_type);
-            Assert.Equal(-13, hResult.result);
-            Assert.Empty(hResult.overflow_args);
-        }
-
-        [Fact]
-        public void can_call_with_extra_args()
-        {
-            var f = funf<int, int>(x => 3 * x);
-
-            var result = call(f, 1, 2);
-
-            Assert.Equal(1, f.arity);
-            Assert.Equal(CallResultType.Full, result.result_type);
-            Assert.Equal(3, result.result);
-            Assert.Equal(new dynamic[] { 2 }, result.overflow_args);
-        }
-
-        [Fact]
-        public void can_call_with_captured_args_and_extra_args()
-        {
-            var f = funf<int, int, int, int>((x, y, z) => x + y - z);
-            var g = capture(f, 2);
-            var h = capture(g, 3);
-
-            var fResult = call(f, 5, 4, 18, 44, 23);
-            var gResult = call(g, 4, 18, 44, 23);
-            var hResult = call(h, 18, 44, 23);
-
-            Assert.Equal(3, f.arity);
-            Assert.Equal(CallResultType.Full, fResult.result_type);
-            Assert.Equal(-9, fResult.result);
-            Assert.Equal(new dynamic[] { 44, 23 }, fResult.overflow_args);
-
-            Assert.Equal(2, g.arity);
-            Assert.Equal(CallResultType.Full, gResult.result_type);
-            Assert.Equal(-12, gResult.result);
-            Assert.Equal(new dynamic[] { 44, 23 }, gResult.overflow_args);
-
-            Assert.Equal(1, h.arity);
-            Assert.Equal(CallResultType.Full, hResult.result_type);
-            Assert.Equal(-13, hResult.result);
-            Assert.Equal(new dynamic[] { 44, 23 }, hResult.overflow_args);
-        }
-
 
         [Fact]
         public void can_compose_1_arg_function_with_no_captured_args_with_any_other_function_with_no_captured_args()
@@ -391,54 +296,68 @@ namespace Funship.Tests
         }
 
         [Fact]
-        public void can_compose()
+        public void can_compose_multi_arg_function_with_no_captured_args_with_any_other_function_with_no_captured_args()
         {
-            var f = funf<int, int>(x => x - 2);
-            var g = funf<int, int>(y => y * 2);
+            var fs = new []
+            {
+                funf((int a1, int a2) => (a1, a2).GetHashCode().GetHashCode()),
+                funf((int a1, int a2, int a3) => (a1, a2, a3).GetHashCode().GetHashCode()),
+                funf((int a1, int a2, int a3, int a4) => (a1, a2, a3, a4).GetHashCode().GetHashCode()),
+                funf((int a1, int a2, int a3, int a4, int a5) => (a1, a2, a3, a4, a5).GetHashCode().GetHashCode()),
+                funf((int a1, int a2, int a3, int a4, int a5, int a6) => (a1, a2, a3, a4, a5, a6).GetHashCode().GetHashCode()),
+                funf((int a1, int a2, int a3, int a4, int a5, int a6, int a7) => (a1, a2, a3, a4, a5, a6, a7).GetHashCode().GetHashCode()),
+                funf((int a1, int a2, int a3, int a4, int a5, int a6, int a7, int a8) => (a1, a2, a3, a4, a5, a6, a7, a8).GetHashCode().GetHashCode()),
+                funf((int a1, int a2, int a3, int a4, int a5, int a6, int a7, int a8, int a9) => (a1, a2, a3, a4, a5, a6, a7, a8, a9).GetHashCode().GetHashCode()),
+                funf((int a1, int a2, int a3, int a4, int a5, int a6, int a7, int a8, int a9, int a10) => (a1, a2, a3, a4, a5, a6, a7, a8, a9, a10).GetHashCode().GetHashCode()),
+                funf((int a1, int a2, int a3, int a4, int a5, int a6, int a7, int a8, int a9, int a10, int a11) => (a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11).GetHashCode().GetHashCode()),
+                funf((int a1, int a2, int a3, int a4, int a5, int a6, int a7, int a8, int a9, int a10, int a11, int a12) => (a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12).GetHashCode().GetHashCode()),
+                funf((int a1, int a2, int a3, int a4, int a5, int a6, int a7, int a8, int a9, int a10, int a11, int a12, int a13) => (a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13).GetHashCode().GetHashCode()),
+                funf((int a1, int a2, int a3, int a4, int a5, int a6, int a7, int a8, int a9, int a10, int a11, int a12, int a13, int a14) => (a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14).GetHashCode().GetHashCode()),
+                funf((int a1, int a2, int a3, int a4, int a5, int a6, int a7, int a8, int a9, int a10, int a11, int a12, int a13, int a14, int a15) => (a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15).GetHashCode().GetHashCode()),
+                funf((int a1, int a2, int a3, int a4, int a5, int a6, int a7, int a8, int a9, int a10, int a11, int a12, int a13, int a14, int a15, int a16) => (a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16).GetHashCode().GetHashCode()),
+            };
 
-            var h = compose(f, g);
-            var i = compose(h, f);
+            var gs = new []
+            {
+                empty<int>(),
+                funf((int a1) => (a1).GetHashCode()),
+                funf((int a1, int a2) => (a1, a2).GetHashCode()),
+                funf((int a1, int a2, int a3) => (a1, a2, a3).GetHashCode()),
+                funf((int a1, int a2, int a3, int a4) => (a1, a2, a3, a4).GetHashCode()),
+                funf((int a1, int a2, int a3, int a4, int a5) => (a1, a2, a3, a4, a5).GetHashCode()),
+                funf((int a1, int a2, int a3, int a4, int a5, int a6) => (a1, a2, a3, a4, a5, a6).GetHashCode()),
+                funf((int a1, int a2, int a3, int a4, int a5, int a6, int a7) => (a1, a2, a3, a4, a5, a6, a7).GetHashCode()),
+                funf((int a1, int a2, int a3, int a4, int a5, int a6, int a7, int a8) => (a1, a2, a3, a4, a5, a6, a7, a8).GetHashCode()),
+                funf((int a1, int a2, int a3, int a4, int a5, int a6, int a7, int a8, int a9) => (a1, a2, a3, a4, a5, a6, a7, a8, a9).GetHashCode()),
+                funf((int a1, int a2, int a3, int a4, int a5, int a6, int a7, int a8, int a9, int a10) => (a1, a2, a3, a4, a5, a6, a7, a8, a9, a10).GetHashCode()),
+                funf((int a1, int a2, int a3, int a4, int a5, int a6, int a7, int a8, int a9, int a10, int a11) => (a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11).GetHashCode()),
+                funf((int a1, int a2, int a3, int a4, int a5, int a6, int a7, int a8, int a9, int a10, int a11, int a12) => (a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12).GetHashCode()),
+                funf((int a1, int a2, int a3, int a4, int a5, int a6, int a7, int a8, int a9, int a10, int a11, int a12, int a13) => (a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13).GetHashCode()),
+                funf((int a1, int a2, int a3, int a4, int a5, int a6, int a7, int a8, int a9, int a10, int a11, int a12, int a13, int a14) => (a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14).GetHashCode()),
+                funf((int a1, int a2, int a3, int a4, int a5, int a6, int a7, int a8, int a9, int a10, int a11, int a12, int a13, int a14, int a15) => (a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15).GetHashCode()),
+            };
 
-            var hResult = call(h, 10);
-            var iResult = call(i, 10);
+            for (var i = 0; i < fs.Length; ++i)
+            {
+                var args = Fist<dynamic>.nilf;
+                for (var j = 0; j < gs.Length - i; ++j)
+                {
+                    var h = compose(fs[i], gs[j]);
+                    var result = call(h, args);
 
-            Assert.Equal(1, h.arity);
-            Assert.Equal(CallResultType.Full, hResult.result_type);
-            Assert.Equal(18, hResult.result);
-            Assert.Empty(hResult.overflow_args);
+                    var closure = result.closure;
 
-            Assert.Equal(1, i.arity);
-            Assert.Equal(CallResultType.Full, iResult.result_type);
-            Assert.Equal(14, iResult.result);
-            Assert.Empty(iResult.overflow_args);
-        }
+                    Assert.Equal(i + j + 1, h.arity);
 
-        [Fact]
-        public void can_call_compose_inferred()
-        {
-            var f = funf<int, int>(x => x - 2);
-            var g = funf<int, int>(y => y * 2);
-            var h = capture(g, f, 10);
+                    Assert.Equal(CallResultType.Partial, result.result_type);
+                    Assert.Empty(result.overflow_args);
+                    Assert.Equal(default, result.result);
 
-            var gfResult = call(g, f, 10);
-            var fgfResult = call(f, g, f, 10);
-            var hResult = call(h);
+                    Assert.Equal(i + 1, closure.arity);
 
-            Assert.Equal(1, f.arity);
-            Assert.Equal(1, g.arity);
-            Assert.Equal(0, h.arity);
-
-            Assert.Equal(CallResultType.Full, gfResult.result_type);
-            Assert.Equal(16, gfResult.result);
-            Assert.Empty(gfResult.overflow_args);
-
-            Assert.Equal(CallResultType.Full, fgfResult.result_type);
-            Assert.Equal(14, fgfResult.result);
-            Assert.Empty(fgfResult.overflow_args);
-
-            Assert.Equal(CallResultType.Full, hResult.result_type);
-            Assert.Equal(16, hResult.result);
-            Assert.Empty(hResult.overflow_args);
+                    args = fist(j + 1, args);
+                }
+            }
         }
     }
 }

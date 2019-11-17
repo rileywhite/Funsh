@@ -113,13 +113,13 @@ namespace Funship
         /// <param name="head"></param>
         /// <param name="tail"></param>
         /// <returns>New fist with the given <paramref name="head"/> and <paramref name="tail"/></returns>
-        public static Fist<T> fist<T>(T head, IEnumerable<T> tail) => head switch
+        public static Fist<TFist> fist<TValue, TFist>(TValue head, IEnumerable<TFist> tail) where TValue : TFist  => head switch
         {
-            Nilf _ => Fist<T>.nilf,
-            _ => LinqFist<T>.__new(Enumerable.Prepend(tail, head)),
+            Nilf _ => Fist<TFist>.nilf,
+            _ => LinqFist<TFist>.__new(Enumerable.Prepend(tail, head)),
         };
         public static Fist<dynamic> fist<T>(T head, IEnumerable tail) =>
-            fist((object)head, tail.Cast<object>());
+            fist(head, tail.Cast<object>());
 
         /// <summary>
         /// Converts a given <see cref="IEnumerable{T}"/> to a <see cref="Fist"/>.
@@ -231,7 +231,7 @@ namespace Funship
         new T head { get; }
         new Fist<T> tail { get; }
 
-        internal new static Fist<T> nilf => new Nilf<T>();
+        public new static Fist<T> nilf => new Nilf<T>();
     }
 
     internal readonly struct Nilf<T> : Fist.Nilf, Fist<T>
